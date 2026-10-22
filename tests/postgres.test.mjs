@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import ts from 'typescript';
+const source=ts.transpileModule(readFileSync('lib/sql-compat.ts','utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ES2022}}).outputText;
+const {postgresQuery}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
+assert.equal(postgresQuery("SELECT '?' AS question, name FROM warriors WHERE id=? AND name=?"),"SELECT '?' AS question, name FROM warriors WHERE id=$1 AND name=$2");
+assert.equal(postgresQuery("SELECT 'isn''t ?' WHERE id=?"),"SELECT 'isn''t ?' WHERE id=$1");
+assert.equal(postgresQuery('INSERT OR IGNORE INTO settings (key,value) VALUES (?,?)'),'INSERT INTO settings (key,value) VALUES ($1,$2) ON CONFLICT DO NOTHING');
+assert.equal(postgresQuery('INSERT INTO atomic_guards (id,value) SELECT ?, changes()',0),'INSERT INTO atomic_guards (id,value) SELECT $1, 0');
+assert.equal(postgresQuery('INSERT INTO atomic_guards (id,value) SELECT ?, changes()',1),'INSERT INTO atomic_guards (id,value) SELECT $1, 1');
+assert.equal(postgresQuery("SELECT id FROM entries WHERE json_extract(payload,'$.slot')=?"),"SELECT id FROM entries WHERE (payload::jsonb ->> 'slot')=$1");
+assert.equal(postgresQuery('DELETE FROM request_buckets WHERE window < ?'),'DELETE FROM request_buckets WHERE "window" < $1');
+console.log('Postgres compatibility checks passed: parameter separation, quoted literals, conflict handling, transaction row-count guards, JSON slot queries and reserved identifiers.');

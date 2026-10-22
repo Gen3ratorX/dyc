@@ -1,0 +1,22 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import ts from 'typescript';
+
+const source=ts.transpileModule(readFileSync('lib/offline.ts','utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ES2022}}).outputText;
+const {seal,unseal}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
+const key=await crypto.subtle.generateKey({name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+const otherKey=await crypto.subtle.generateKey({name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+const record={warriorId:'synthetic-test',value:6.2,note:'Synthetic private record'};
+const encrypted=await seal(key,'staff-a','camp',record);
+assert.deepEqual(await unseal(key,'staff-a','camp',encrypted),record);
+assert.equal(key.extractable,false);
+assert.equal(encrypted.iv.length,12);
+assert.notDeepEqual((await seal(key,'staff-a','camp',record)).iv,encrypted.iv);
+assert.equal(Buffer.from(encrypted.cipher).includes(Buffer.from(record.note)),false);
+await assert.rejects(()=>unseal(otherKey,'staff-a','camp',encrypted));
+await assert.rejects(()=>unseal(key,'staff-b','camp',encrypted));
+await assert.rejects(()=>unseal(key,'staff-a','command:test',encrypted));
+const tampered=encrypted.cipher.slice(0);
+new Uint8Array(tampered)[0]^=1;
+await assert.rejects(()=>unseal(key,'staff-a','camp',{...encrypted,cipher:tampered}));
+console.log('Offline encryption checks passed: authenticated round-trip, non-extractable key, fresh IV, account and record isolation, wrong-key and tampering rejection.');

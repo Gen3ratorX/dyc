@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import ts from 'typescript';
+const source=ts.transpileModule(readFileSync('lib/domain.ts','utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ES2022}}).outputText;
+const {can,careDay,validate,csv}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
+assert.equal(careDay('2026-11-12T03:00:00Z'),'2026-11-11');
+assert.equal(careDay('2026-11-12T06:00:00Z'),'2026-11-12');
+assert.equal(can('mentor','regimen'),false);assert.equal(can('mentor','reading'),true);assert.equal(can('coordinator','reading'),false);assert.equal(can('nurse','administration'),true);
+const at='2026-01-12T12:00:00Z';const p={value:6.2,slot:'Before lunch',unit:'mmol/L',method:'Finger-prick glucometer',measuredAt:at,careDay:'2026-01-12'};
+validate('reading',p);validate('reading',{...p,value:'HI'});
+for(const value of [0,-1,NaN,Infinity,'6.2'])assert.throws(()=>validate('reading',{...p,value}));
+assert.throws(()=>validate('reading',{...p,unit:'mg/dL'}));assert.throws(()=>validate('reading',{...p,careDay:'2026-01-11'}));validate('reading',{...p,careDay:'2026-01-11',overrideReason:'Waking early'});
+assert.throws(()=>validate('exception',{...p,status:'Declined',note:''}));assert.throws(()=>validate('administration',{...p,dose:2,doseUnit:'units',medicine:'Demo'}));
+assert.equal(csv([['=HYPERLINK("x")','a,b','a"b']]),'"\'=HYPERLINK(""x"")","a,b","a""b"');
+console.log('Domain checks passed: overnight care day, role permissions, units, HI/LO, invalid values, override reasons, administration requirements, CSV formula escaping.');

@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1792309281550,
+      "tag": "0000_wakeful_the_professor",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1792608784610,
+      "tag": "0001_warm_maximus",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1792609126106,
+      "tag": "0002_smooth_mister_fear",
+      "breakpoints": true
+    }
+  ]
+}

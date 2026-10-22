@@ -1,0 +1,2 @@
+import {runtime,secureHeaders} from '../../../lib/server-security';
+export async function GET(){try{const config=runtime();if(!config.DB)throw Error();await config.DB.prepare('SELECT 1 FROM members LIMIT 1').first();const ready=config.APP_MODE==='demo'||Boolean(config.APP_ORIGIN&&config.BOOTSTRAP_ADMIN_EMAIL&&config.SUPABASE_URL&&config.SUPABASE_PUBLISHABLE_KEY);return Response.json({ok:ready},{status:ready?200:503,headers:secureHeaders});}catch{return Response.json({ok:false},{status:503,headers:secureHeaders});}}
