@@ -1,6 +1,7 @@
 import 'server-only';
 import postgres from 'postgres';
 import {postgresQuery} from './sql-compat';
+import {databaseTLS} from './database-tls';
 
 type Row=Record<string,unknown>;
 type QueryResult=Row[]&{count:number};
@@ -15,7 +16,7 @@ export function database():ServerDatabase|undefined{
  if(!url)return undefined;
  if(instance)return instance;
  // Transaction-pooler compatible; no session state or prepared statements.
- connection=postgres(url,{prepare:false,max:1,idle_timeout:20,connect_timeout:10,ssl:{rejectUnauthorized:true}});
+ connection=postgres(url,{prepare:false,max:1,idle_timeout:20,connect_timeout:10,ssl:databaseTLS(url)});
  const client=connection;
  async function transaction<T>(run:(tx:Executor)=>Promise<T>,write=false):Promise<T>{
   return await client.begin(async tx=>{

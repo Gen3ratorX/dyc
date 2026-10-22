@@ -1,5 +1,5 @@
-import {context,failure} from '../camp/route';
-import {runtime,RequestError,requireSameOrigin,secureHeaders,rateLimit} from '../../../lib/server-security';
+import {context} from '../../../lib/camp-context';
+import {runtime,RequestError,requireSameOrigin,secureHeaders,rateLimit,failure} from '../../../lib/server-security';
 import {can,roles,validate, type Role} from '../../../lib/domain';
 export async function POST(req:Request){try{
  requireSameOrigin(req);
