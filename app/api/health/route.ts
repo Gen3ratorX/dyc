@@ -1,2 +1,13 @@
 import {runtime,secureHeaders} from '../../../lib/server-security';
-export async function GET(){try{const config=runtime();if(!config.DB)throw Error();await config.DB.prepare('SELECT 1 FROM members LIMIT 1').first();const ready=config.APP_MODE==='demo'||Boolean(config.APP_ORIGIN&&config.BOOTSTRAP_ADMIN_EMAIL&&config.SUPABASE_URL&&config.SUPABASE_PUBLISHABLE_KEY);return Response.json({ok:ready},{status:ready?200:503,headers:secureHeaders});}catch{return Response.json({ok:false},{status:503,headers:secureHeaders});}}
+export async function GET(){try{
+ const config=runtime();
+ const required={DATABASE_URL:Boolean(config.DB),SUPABASE_URL:Boolean(config.SUPABASE_URL),SUPABASE_PUBLISHABLE_KEY:Boolean(config.SUPABASE_PUBLISHABLE_KEY),BOOTSTRAP_ADMIN_EMAIL:Boolean(config.BOOTSTRAP_ADMIN_EMAIL),APP_ORIGIN:Boolean(config.APP_ORIGIN)};
+ const missing=Object.entries(required).filter(([,present])=>!present).map(([key])=>key);
+ if(missing.length)return Response.json({ok:false,code:'CONFIGURATION_INCOMPLETE',missing},{status:503,headers:secureHeaders});
+ await config.DB!.prepare('SELECT 1 FROM members LIMIT 1').first();
+ return Response.json({ok:true},{headers:secureHeaders});
+}catch{
+ // Report the failure category only. Connection strings, credentials, provider
+ // errors and clinical data must never appear in this public response.
+ return Response.json({ok:false,code:'DATABASE_UNAVAILABLE'},{status:503,headers:secureHeaders});
+}}

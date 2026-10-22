@@ -5,8 +5,8 @@ export const runtime = () => ({
   APP_MODE:'production', APP_AUTH_PROVIDER:'supabase',
   APP_ORIGIN:process.env.APP_ORIGIN,
   BOOTSTRAP_ADMIN_EMAIL:process.env.BOOTSTRAP_ADMIN_EMAIL,
-  SUPABASE_URL:process.env.SUPABASE_URL,
-  SUPABASE_PUBLISHABLE_KEY:process.env.SUPABASE_PUBLISHABLE_KEY,
+  SUPABASE_URL:process.env.SUPABASE_URL?.trim()||process.env.NEXT_PUBLIC_SUPABASE_URL?.trim(),
+  SUPABASE_PUBLISHABLE_KEY:process.env.SUPABASE_PUBLISHABLE_KEY?.trim()||process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim()||process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim(),
   DB:database(),
 });
 export class RequestError extends Error {

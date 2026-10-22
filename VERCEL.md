@@ -20,3 +20,5 @@ The SQL adapter preserves parameter binding and atomic write batches. A transact
 Build and focused tests must pass before pushing. A successful build does not verify the database connection string or staff password sign-in: those require the Vercel environment and user-assisted sign-in after import. Do not enter identifiable medical data until hosted permissions, offline recovery, backups, clinical workflows and load testing have been accepted.
 
 Supabase security advisor currently warns that leaked-password protection is disabled. Enable it when the project plan supports it, and complete the clinical acceptance checks before real use.
+
+The app also accepts Supabase’s standard `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` names (or the legacy `NEXT_PUBLIC_SUPABASE_ANON_KEY`). Use either naming scheme for these public provider values. Database credentials remain server-only. `/api/health` reports missing variable names or `DATABASE_UNAVAILABLE`, and never returns their values.
