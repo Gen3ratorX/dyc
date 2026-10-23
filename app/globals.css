@@ -133,3 +133,28 @@ body{font-family:var(--font-body);background:#f7f8fb}h1,h2,h3{font-family:var(--
 .session-signout-row .settings-signout:hover{background:#fff5f5;border-color:#d5a9b0;color:#842b35}
 .settings-card .settings-list{padding-bottom:16px}
 @media(max-width:600px){.settings-grid{gap:20px}.settings-card .session-controls{padding:4px 18px 20px}.session-offline{padding:14px;gap:10px}.session-offline-icon{width:28px;height:28px}.session-signout-row{align-items:flex-start;flex-direction:column;gap:14px}.session-signout-row .settings-signout{width:100%;min-height:44px}.session-enable-offline{min-height:44px}}
+
+/* Care entry uses a scrollable body with a separate, always-visible action bar. */
+.reading-drawer{width:540px;max-width:100%;height:calc(100dvh - 24px);max-height:940px;display:flex;flex-direction:column}
+.reading-drawer .modal-content{display:flex;flex-direction:column;gap:22px;padding:22px 24px 30px;scrollbar-gutter:stable;scroll-padding:24px}
+.reading-drawer .modal-content>*{flex-shrink:0;margin-top:0;margin-bottom:0}
+.reading-drawer .modal-content>.form-label:first-child,.reading-drawer .modal-content>.form-label{margin:0}
+.reading-drawer .form-label,.reading-drawer .glucose-input-label{display:flex;flex-direction:column;gap:8px;margin:0;font-size:13px;line-height:1.5}
+.reading-drawer .glucose-input{margin:0;min-height:66px;height:auto}
+.reading-drawer .glucose-input>input{font-size:32px!important;min-width:0;min-height:48px}
+.reading-drawer .glucose-input-label>small{font-size:11px;line-height:1.6;margin:0}
+.reading-drawer .entry-person{min-height:30px;padding:0;margin:0}
+.reading-drawer .entry-person small{font-size:12px;line-height:1.5}
+.reading-drawer .check-picker{gap:8px;margin:0}
+.reading-drawer .check-picker legend{margin-bottom:10px}
+.reading-drawer .check-picker label>span{min-height:40px;padding:9px 6px;font-size:12px}
+.reading-drawer .observation-timing{margin:0}
+.reading-drawer .form-label textarea{min-height:96px;resize:vertical}
+.reading-drawer .modal-footer{padding:16px 24px;gap:12px;box-shadow:0 -3px 12px #00265408}
+.reading-drawer .modal-footer>.primary{margin-right:0}
+.reading-drawer .modal-footer>button{min-height:44px}
+.reading-drawer .modal-content:focus-within{scroll-behavior:auto}
+@media(max-width:600px){.drawer-backdrop{padding:0}.reading-drawer{width:100%;height:100dvh;max-height:100dvh;border-radius:0;border:0}.reading-drawer .modal-header{border-radius:0;padding:16px 18px}.reading-drawer .modal-content{padding:20px 18px 28px;gap:20px}.reading-drawer .modal-footer{padding:12px 18px;padding-bottom:max(12px,env(safe-area-inset-bottom))}.reading-drawer .check-picker label>span{min-height:44px;font-size:11px}}
+
+.reading-drawer .glucose-input-label>small.value-help-error{color:#a33540}
+.reading-drawer input[aria-invalid=true]{color:#a33540}
