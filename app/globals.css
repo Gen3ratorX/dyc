@@ -117,3 +117,19 @@ body{font-family:var(--font-body);background:#f7f8fb}h1,h2,h3{font-family:var(--
 
 .summary-metrics>div.summary-metric{background:transparent;border:0;border-radius:0;box-shadow:none}
 .summary-metrics>div.summary-metric+div.summary-metric{border-left:1px solid #dfe7ef}
+
+/* Session actions have their own padded area, separate from account details. */
+.settings-grid{align-items:start}
+.settings-card .session-controls{padding:4px 22px 22px}
+.session-offline{display:flex;gap:12px;padding:16px;background:#f4f9fd;border:1px solid #e0edf6;border-radius:12px}
+.session-offline-icon{display:grid;place-items:center;flex-shrink:0;width:34px;height:34px;color:#007bc4;background:#e4f2fc;border-radius:9px}
+.session-offline h3{font-family:var(--font-body);font-size:13px;font-weight:650;line-height:1.5;margin:0 0 5px;color:#214762}
+.session-offline p{font-size:12px;line-height:1.65;color:#61778c;margin:0;max-width:48ch}
+.session-enable-offline{margin-top:13px;padding:9px 12px;min-height:42px;font-size:12px;gap:10px;background:#fff;border-color:#c8deed;color:#006fae;box-shadow:none}
+.session-signout-row{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-top:20px;padding-top:18px;border-top:1px solid #e7eef4}
+.session-signout-row p{margin:0;font-size:12px;line-height:1.6;color:#344f68}
+.session-signout-row p span{display:block;color:#74869a;font-size:11px;margin-top:3px;max-width:34ch}
+.session-signout-row .settings-signout{display:inline-flex;flex-shrink:0;align-items:center;justify-content:center;gap:8px;margin:0;min-height:42px;padding:9px 14px;font-size:12px;color:#9c3b45;background:#fff;border:1px solid #ead8dc;border-radius:9px;box-shadow:none}
+.session-signout-row .settings-signout:hover{background:#fff5f5;border-color:#d5a9b0;color:#842b35}
+.settings-card .settings-list{padding-bottom:16px}
+@media(max-width:600px){.settings-grid{gap:20px}.settings-card .session-controls{padding:4px 18px 20px}.session-offline{padding:14px;gap:10px}.session-offline-icon{width:28px;height:28px}.session-signout-row{align-items:flex-start;flex-direction:column;gap:14px}.session-signout-row .settings-signout{width:100%;min-height:44px}.session-enable-offline{min-height:44px}}
