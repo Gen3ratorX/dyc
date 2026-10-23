@@ -1,11 +1,23 @@
 'use client';
 import {useState,type FormEvent} from 'react';
-import {ArrowRight,ShieldCheck,LockKeyhole} from 'lucide-react';
+import {ArrowRight,ShieldCheck,LockKeyhole,Eye,EyeOff,LoaderCircle} from 'lucide-react';
 
 export function StaffLogin({error}:{error:string}){
- const [busy,setBusy]=useState(false),[problem,setProblem]=useState('');
+ const [busy,setBusy]=useState(false),[problem,setProblem]=useState(''),[showPassword,setShowPassword]=useState(false);
  async function submit(event:FormEvent<HTMLFormElement>){event.preventDefault();setBusy(true);setProblem('');const form=event.currentTarget;try{const fields=new FormData(form);const response=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:String(fields.get('email')||''),password:String(fields.get('password')||'')})});const result=await response.json() as {error?:string;next?:string};if(!response.ok)throw Error(result.error||'Sign-in is unavailable.');form.reset();location.assign('/');}catch(err){setProblem((err as Error).message);}finally{setBusy(false);}}
- return <main className="access-page"><section className="access-card"><img src="/dyc-logo-light.png" alt="Diabetes Youth Care" className="access-logo" width="768" height="398"/><span className="eyebrow">CAMP VICTORY · STAFF ACCESS</span><h1>Care starts with you.</h1><p>Sign in with the staff account and password provided by your camp administrator.</p><form onSubmit={submit}><label className="form-label">Staff email<input name="email" type="email" autoComplete="username" maxLength={254} placeholder="you@example.org" required /></label><label className="form-label">Password<input name="password" type="password" autoComplete="current-password" maxLength={1024} required /></label><button className="primary" disabled={busy}><LockKeyhole size={16}/>{busy?'Signing in…':'Sign in'}<ArrowRight size={16}/></button></form>{(problem||error)&&<p className="access-error" role="alert">{problem||error}</p>}<small><ShieldCheck size={14}/>Only approved staff can access camp records.</small></section></main>;
+ return <main className="access-page"><section className="access-card staff-login" aria-labelledby="login-title">
+  <header className="access-header"><img src="/dyc-logo-light.png" alt="Diabetes Youth Care" className="access-logo" width="768" height="398"/><span className="access-badge"><span/>Camp Victory · Staff access</span></header>
+  <h1 id="login-title">Care starts with you.</h1>
+  <p className="access-intro">Welcome to your care desk. Sign in with the account provided by your camp administrator.</p>
+  <form onSubmit={submit} aria-busy={busy}>
+   <label className="form-label" htmlFor="staff-email">Staff email<input id="staff-email" name="email" type="email" autoComplete="username" autoCapitalize="none" spellCheck={false} maxLength={254} placeholder="you@example.org" required disabled={busy}/></label>
+   <div className="access-field"><label className="form-label" htmlFor="staff-password">Password</label><div className="access-password"><input id="staff-password" name="password" type={showPassword?'text':'password'} autoComplete="current-password" maxLength={1024} placeholder="Enter your password" required disabled={busy}/><button className="password-toggle" type="button" aria-label={showPassword?'Hide password':'Show password'} aria-pressed={showPassword} onClick={()=>setShowPassword(value=>!value)}>{showPassword?<EyeOff size={19}/>:<Eye size={19}/>}</button></div></div>
+   {(problem||error)&&<p className="access-error" role="alert">{problem||error}</p>}
+   <button className="primary access-submit" disabled={busy}>{busy?<LoaderCircle className="access-spinner" size={18}/>:<LockKeyhole size={18}/>}<span>{busy?'Signing in…':'Sign in'}</span>{!busy&&<ArrowRight size={18}/>}</button>
+  </form>
+  <p className="access-help">Need an account or a password reset?<br/><strong>Contact your camp administrator.</strong></p>
+  <footer className="access-footer"><ShieldCheck size={16}/><span>For approved Camp Victory staff</span></footer>
+ </section></main>;
 }
 export function DeviceAccess({setup,vaults,actor,onActor,onUnlock,onSignOut,error}:{setup:boolean;vaults:{actor:string;label:string}[];actor:string;onActor:(id:string)=>void;onUnlock:(passphrase:string)=>Promise<void>;onSignOut:()=>Promise<void>;error:string}){
  const [busy,setBusy]=useState(false),[problem,setProblem]=useState('');

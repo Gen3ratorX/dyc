@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { validate, type Camp, type Command } from './domain';
 import { read, write, queue, enqueue, dequeue, createVault,unlockVault,lockVault,vaultActor,listVaults,hasVault } from './offline';
-class AuthenticationError extends Error {}
+class AuthenticationError extends Error { constructor(message:string,readonly status?:number){super(message);} }
 export function useCamp(){
  const [camp,setCamp]=useState<Camp|null>(null),[loading,setLoading]=useState(true),[online,setOnline]=useState(true);
  const [pending,setPending]=useState<Command[]>([]),[syncErrors,setSyncErrors]=useState<Record<string,string>>({});
@@ -13,7 +13,7 @@ export function useCamp(){
  const forget=useCallback(()=>{const actor=vaultActor();lockVault();current.current=null;setCamp(null);setPending([]);setSyncErrors({});setGate(actor?'locked':'signed-out');if(actor)setDeviceActor(actor);},[]);
  const fetchCamp=useCallback(async()=>{
   const response=await fetch('/api/camp',{cache:'no-store'});const result=await response.json() as Camp&{error?:string};
-  if(!response.ok){if([401,403].includes(response.status)){try{if(vaultActor())await write('camp',null);}finally{forget();setGate('signed-out');}throw new AuthenticationError(result.error||'Sign in to continue.');}throw Error(result.error||'The camp could not be opened.');}
+  if(!response.ok){if([401,403].includes(response.status)){try{if(vaultActor())await write('camp',null);}finally{forget();setGate('signed-out');}throw new AuthenticationError(result.error||'Sign in to continue.',response.status);}throw Error(result.error||'The camp could not be opened.');}
   return result;
  },[forget]);
  const refresh=useCallback(async()=>{const fresh=await fetchCamp();if(!vaultActor())return fresh;if(vaultActor()!==fresh.user.id){forget();throw new AuthenticationError('The signed-in account changed. Unlock the correct staff account.');}current.current=fresh;await write('camp',fresh);if(vaultActor()===fresh.user.id)setCamp(fresh);return fresh;},[fetchCamp,forget]);
@@ -33,7 +33,7 @@ export function useCamp(){
  useEffect(()=>{
   async function boot(){setOnline(navigator.onLine);let available:{actor:string;label:string}[]=[];try{available=await listVaults();setVaults(available);}catch{setError('Secure device storage is unavailable. Use a supported browser with device storage enabled.');setLoading(false);return;}
    try{const fresh=await fetchCamp();current.current=fresh;setDeviceActor(fresh.user.id);setGate(await hasVault(fresh.user.id)?'locked':'setup');}
-   catch(err){if(err instanceof TypeError&&available.length){setOnline(false);setDeviceActor(available[0].actor);setGate('locked');}else setError((err as Error).message);}
+   catch(err){if(err instanceof TypeError&&available.length){setOnline(false);setDeviceActor(available[0].actor);setGate('locked');}else if(!(err instanceof AuthenticationError&&err.status===401))setError((err as Error).message);}
    finally{setLoading(false);}
   }void boot();
   const connected=()=>{setOnline(true);void sync();};const disconnected=()=>setOnline(false);
