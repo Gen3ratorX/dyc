@@ -15,7 +15,7 @@ export async function POST(request:Request){try{
   await rateLimit(config.DB,digest,'login-email',5);
   await rateLimit(config.DB,request.headers.get('cf-connecting-ip')||'unknown','login-ip',30);
   const client=await authClient();
-  const member=await config.DB.prepare('SELECT active FROM members WHERE email=?').bind(email).first<{active:number}>();
+  const member=await config.DB.prepare('SELECT active,role FROM members WHERE email=?').bind(email).first<{active:number;role:string}>();
   const eligible=member?.active===1||email===config.BOOTSTRAP_ADMIN_EMAIL?.trim().toLowerCase();
   // Accounts are provisioned by an administrator. Signing in never creates an
   // account or sends a verification message.
@@ -25,5 +25,5 @@ export async function POST(request:Request){try{
     throw new RequestError('401:Staff email or password is incorrect, or access has not been approved.');
   }
   await createStaffSession(data.user.id);
-  return Response.json({ok:true,next:'/'},{headers:secureHeaders});
+  return Response.json({ok:true,next:member?.role==='administrator'?'/settings':'/'},{headers:secureHeaders});
 }catch(error){return failure(error);}}

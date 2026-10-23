@@ -5,11 +5,11 @@ export type Warrior = {id:string;name:string;age:number;group_name:string;room:s
 export type Entry = {id:string;warrior_id:string;kind:string;care_day:string;measured_at:string;payload:Record<string,any>;author:string;received_at:string};
 export type Review = {id:string;warrior_id:string;reason:string;status:string;owner:string;proposed_owner:string|null;version:number;created_at:string;outcome:string};
 export type Regimen = {id:string;warrior_id:string;medicine:string;dose:string;instructions:string;author:string;at:string;version:number};
-export type Member = {email:string;role:Role;groups:string[];active?:boolean};
+export type Member = {email:string;role:Role;groups:string[];active?:boolean;isOwner?:boolean};
 export type Camp = {mode?:'demo'|'production';offlineExpiresAt?:string;authProvider?:'sites'|'supabase';user:{email:string;name:string;role:Role;groups:string[];owner:boolean;id:string};warriors:Warrior[];entries:Entry[];reviews:Review[];regimens:Regimen[];members:Member[];serverTime:string};
 export type Command = {id:string;type:string;warrior?:string;payload:Record<string,any>;createdAt:string;actor:string};
 export function careDay(at:string){const d=new Date(new Date(at).getTime()-6*3600000);return d.toISOString().slice(0,10);}
-export function can(role:Role, action:string){const map:Record<string,readonly string[]>={reading:['medical_lead','doctor','nurse','mentor'],note:['medical_lead','doctor','nurse','mentor'],review:['medical_lead','doctor','nurse','mentor'],exception:['medical_lead','doctor','nurse'],regimen:['medical_lead','doctor'],administration:['medical_lead','doctor','nurse'],transition:['medical_lead','doctor'],register:['medical_lead','coordinator'],assignment:['medical_lead','coordinator'],members:['medical_lead'],seed:['medical_lead']};return (map[action]||[]).includes(role);}
+export function can(role:Role, action:string){const map:Record<string,readonly string[]>={reading:['medical_lead','doctor','nurse','mentor'],note:['medical_lead','doctor','nurse','mentor'],review:['medical_lead','doctor','nurse','mentor'],exception:['medical_lead','doctor','nurse'],regimen:['medical_lead','doctor'],administration:['medical_lead','doctor','nurse'],transition:['medical_lead','doctor'],register:['medical_lead','coordinator'],assignment:['medical_lead','coordinator'],members:['medical_lead','administrator'],seed:['medical_lead']};return (map[action]||[]).includes(role);}
 export class ValidationError extends Error { constructor(message:string){super(message);this.name='ValidationError';} }
 const invalid=(message:string):never=>{throw new ValidationError(message);};
 export function validDay(value:unknown):value is string {

@@ -16,3 +16,5 @@ export async function verifyStaffSession(userId:string){
  return Boolean(row);
 }
 export async function revokeStaffSession(){const db=runtime().DB,jar=await cookies(),token=jar.get(COOKIE)?.value;if(db&&token)await db.prepare('UPDATE staff_sessions SET revoked=1 WHERE id=?').bind(await digest(token)).run();jar.set(COOKIE,'',{httpOnly:true,secure:true,sameSite:'lax',path:'/',maxAge:0});}
+
+export async function staffSessionDigest(){const token=(await cookies()).get(COOKIE)?.value;return token&&/^[a-f0-9]{64}$/.test(token)?await digest(token):null;}

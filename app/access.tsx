@@ -1,15 +1,16 @@
 'use client';
-import {useState,type FormEvent} from 'react';
+import {useState,useEffect,type FormEvent} from 'react';
 import {ArrowRight,ShieldCheck,LockKeyhole,Eye,EyeOff,LoaderCircle} from 'lucide-react';
 
 export function StaffLogin({error}:{error:string}){
- const [busy,setBusy]=useState(false),[problem,setProblem]=useState(''),[showPassword,setShowPassword]=useState(false);
- async function submit(event:FormEvent<HTMLFormElement>){event.preventDefault();setBusy(true);setProblem('');const form=event.currentTarget;try{const fields=new FormData(form);const response=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:String(fields.get('email')||''),password:String(fields.get('password')||'')})});const result=await response.json() as {error?:string;next?:string};if(!response.ok)throw Error(result.error||'Sign-in is unavailable.');form.reset();location.reload();}catch(err){setProblem((err as Error).message);}finally{setBusy(false);}}
+ const [busy,setBusy]=useState(false),[problem,setProblem]=useState(''),[showPassword,setShowPassword]=useState(false),[passwordChanged,setPasswordChanged]=useState(false),[sessionWarning,setSessionWarning]=useState(false);
+ useEffect(()=>{const query=new URLSearchParams(location.search);setPasswordChanged(query.get('password')==='changed');setSessionWarning(query.get('sessions')==='check');},[]);
+ async function submit(event:FormEvent<HTMLFormElement>){event.preventDefault();setBusy(true);setProblem('');const form=event.currentTarget;try{const fields=new FormData(form);const response=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:String(fields.get('email')||''),password:String(fields.get('password')||'')})});const result=await response.json() as {error?:string;next?:string};if(!response.ok)throw Error(result.error||'Sign-in is unavailable.');form.reset();if(result.next==='/settings'&&['/','/overview'].includes(location.pathname))location.assign('/settings');else location.reload();}catch(err){setProblem((err as Error).message);}finally{setBusy(false);}}
  return <main className="access-page"><section className="access-card staff-login" aria-labelledby="login-title">
   <header className="access-header"><img src="/dyc-logo-light.png" alt="Diabetes Youth Care" className="access-logo" width="768" height="398"/><span className="access-badge"><span/>Camp Victory · Staff access</span></header>
   <h1 id="login-title">Care starts with you.</h1>
   <p className="access-intro">Welcome to your care desk. Sign in with the account provided by your camp administrator.</p>
-  <form onSubmit={submit} aria-busy={busy}>
+  <form onSubmit={submit} aria-busy={busy}>{passwordChanged&&<p className="access-message" role="status">Password changed. Sign in with your new password.{sessionWarning&&<span className="session-cleanup-warning">Other sessions could not be confirmed closed. Contact your camp administrator.</span>}</p>}
    <label className="form-label" htmlFor="staff-email">Staff email<input id="staff-email" name="email" type="email" autoComplete="username" autoCapitalize="none" spellCheck={false} maxLength={254} placeholder="you@example.org" required disabled={busy}/></label>
    <div className="access-field"><label className="form-label" htmlFor="staff-password">Password</label><div className="access-password"><input id="staff-password" name="password" type={showPassword?'text':'password'} autoComplete="current-password" maxLength={1024} placeholder="Enter your password" required disabled={busy}/><button className="password-toggle" type="button" aria-label={showPassword?'Hide password':'Show password'} aria-pressed={showPassword} onClick={()=>setShowPassword(value=>!value)}>{showPassword?<EyeOff size={19}/>:<Eye size={19}/>}</button></div></div>
    {(problem||error)&&<p className="access-error" role="alert">{problem||error}</p>}
