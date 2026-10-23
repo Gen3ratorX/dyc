@@ -16,9 +16,9 @@ export function useCamp(){
   if(!response.ok){if([401,403].includes(response.status)){try{if(vaultActor())await write('camp',null);}finally{forget();setGate('signed-out');}throw new AuthenticationError(result.error||'Sign in to continue.',response.status);}throw Error(result.error||'The camp could not be opened.');}
   return result;
  },[forget]);
- const refresh=useCallback(async()=>{const fresh=await fetchCamp();if(!vaultActor())return fresh;if(vaultActor()!==fresh.user.id){forget();throw new AuthenticationError('The signed-in account changed. Unlock the correct staff account.');}current.current=fresh;await write('camp',fresh);if(vaultActor()===fresh.user.id)setCamp(fresh);return fresh;},[fetchCamp,forget]);
+ const refresh=useCallback(async()=>{const fresh=await fetchCamp();if(!vaultActor()){current.current=fresh;setCamp(fresh);return fresh;}if(vaultActor()!==fresh.user.id){forget();throw new AuthenticationError('The signed-in account changed. Unlock the correct staff account.');}current.current=fresh;await write('camp',fresh);if(vaultActor()===fresh.user.id)setCamp(fresh);return fresh;},[fetchCamp,forget]);
  const sync=useCallback(async()=>{
-  if(syncLock.current||!navigator.onLine||!vaultActor())return;syncLock.current=true;setSyncing(true);
+  if(syncLock.current||!navigator.onLine)return;if(!vaultActor()){try{await refresh();}catch(err){setError((err as Error).message);}return;}syncLock.current=true;setSyncing(true);
   try{const fresh=await refresh();for(const command of await queue()){
    if(!vaultActor()||command.actor!==fresh.user.id)break;
    try{const response=await fetch('/api/command',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(command)});const result=await response.json() as {error?:string;message?:string;next?:string};
@@ -31,14 +31,14 @@ export function useCamp(){
   finally{syncLock.current=false;setSyncing(false);}
  },[refresh]);
  useEffect(()=>{
-  async function boot(){setOnline(navigator.onLine);let available:{actor:string;label:string}[]=[];try{available=await listVaults();setVaults(available);}catch{setError('Secure device storage is unavailable. Use a supported browser with device storage enabled.');setLoading(false);return;}
-   try{const fresh=await fetchCamp();current.current=fresh;setDeviceActor(fresh.user.id);setGate(await hasVault(fresh.user.id)?'locked':'setup');}
+  async function boot(){setOnline(navigator.onLine);let available:{actor:string;label:string}[]=[];try{available=await listVaults();setVaults(available);}catch{setVaults([]);}
+   try{const fresh=await fetchCamp();current.current=fresh;setDeviceActor(fresh.user.id);setCamp(fresh);setGate('ready');lastActivity.current=Date.now();}
    catch(err){if(err instanceof TypeError&&available.length){setOnline(false);setDeviceActor(available[0].actor);setGate('locked');}else if(!(err instanceof AuthenticationError&&err.status===401))setError((err as Error).message);}
    finally{setLoading(false);}
   }void boot();
   const connected=()=>{setOnline(true);void sync();};const disconnected=()=>setOnline(false);
   window.addEventListener('online',connected);window.addEventListener('offline',disconnected);
-  const timer=setInterval(()=>{if(navigator.onLine&&vaultActor())void sync();},30000);
+  const timer=setInterval(()=>{if(navigator.onLine&&current.current)void sync();},30000);
   if('serviceWorker'in navigator&&process.env.NODE_ENV==='production')void navigator.serviceWorker.register('/sw.js').then(()=>navigator.serviceWorker.ready).then(registration=>{registration.active?.postMessage({type:'CACHE_SHELL',urls:performance.getEntriesByType('resource').map(resource=>resource.name)});}).catch(()=>{});
   return()=>{clearInterval(timer);window.removeEventListener('online',connected);window.removeEventListener('offline',disconnected);};
  },[fetchCamp,sync]);
@@ -59,17 +59,18 @@ export function useCamp(){
   const result=await response.json() as {error?:string;message?:string;next?:string};location.assign(result.next==='/signout-with-chatgpt?return_to=/'?result.next:'/');
  };
  useEffect(()=>{const active=()=>{lastActivity.current=Date.now();};window.addEventListener('pointerdown',active);window.addEventListener('keydown',active);
-  const timer=setInterval(()=>{if(vaultActor()&&Date.now()-lastActivity.current>15*60000){void closeSession().catch(err=>setError((err as Error).message));}},15000);
+  const timer=setInterval(()=>{if(current.current&&Date.now()-lastActivity.current>15*60000){void closeSession().catch(err=>setError((err as Error).message));}},15000);
   return()=>{clearInterval(timer);window.removeEventListener('pointerdown',active);window.removeEventListener('keydown',active);};
  },[forget]);
  const send=async(type:string,payload:Record<string,any>,warrior?:string)=>{
-  const user=current.current?.user;if(!user||vaultActor()!==user.id)throw Error('Sign in and unlock this device first.');validate(type,payload);
+  const user=current.current?.user;if(!user||(vaultActor()&&vaultActor()!==user.id))throw Error('Sign in to your staff account first.');validate(type,payload);
   if(!current.current?.offlineExpiresAt||Date.parse(current.current.offlineExpiresAt)<Date.now())throw Error('Refresh your staff session before recording more entries.');
   const command:Command={id:crypto.randomUUID(),actor:user.id,type,warrior,payload,createdAt:new Date().toISOString()};
   const acceptsOffline=['reading','note','exception','administration','review'].includes(type);
   if((!navigator.onLine||!online)&&!acceptsOffline)throw Error('Reconnect to save this change.');
-  if(acceptsOffline){await enqueue(command);setPending(await queue());setNotice('Encrypted on this device. Waiting to sync.');if(navigator.onLine){await sync();if(vaultActor()&&!(await queue()).some(item=>item.id===command.id))setNotice('Saved. Your care team can now see this record.');}return;}
+  if(!vaultActor()&&(!navigator.onLine||!online))throw Error('Reconnect to save this entry. You can enable protected offline access in Camp settings.');
+  if(acceptsOffline&&vaultActor()){await enqueue(command);setPending(await queue());setNotice('Encrypted on this device. Waiting to sync.');if(navigator.onLine){await sync();if(vaultActor()&&!(await queue()).some(item=>item.id===command.id))setNotice('Saved. Your care team can now see this record.');}return;}
   const response=await fetch('/api/command',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(command)});const result=await response.json() as {error?:string;message?:string;next?:string};if(!response.ok)throw Error(result.error||'The change could not be saved.');await refresh();setNotice('Changes saved.');
  };
- return {camp,loading,online,pending,syncing,syncErrors,error,setError,notice,setNotice,send,sync,refresh,gate,vaults,deviceActor,setDeviceActor,unlockDevice,closeSession,lockDevice:closeSession};
+ return {camp,loading,online,pending,syncing,syncErrors,error,setError,notice,setNotice,send,sync,refresh,gate,offlineEnabled:Boolean(vaultActor()),enableOffline:async()=>{const actor=current.current?.user.id;if(!actor)throw Error('Sign in first.');setDeviceActor(actor);setGate(await hasVault(actor)?'locked':'setup');},vaults,deviceActor,setDeviceActor,unlockDevice,closeSession,lockDevice:closeSession};
 }
