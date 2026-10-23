@@ -16,7 +16,7 @@ export function CampDate({ value, onChange, name, label }: { value: string; onCh
   const days = Array.from({ length: 42 }, (_, index) => { const day = new Date(start); day.setUTCDate(start.getUTCDate() + index); return day; });
   function move(amount: number) { const next = new Date(first); next.setUTCMonth(first.getUTCMonth() + amount); setMonth(iso(next).slice(0, 7)); }
   function choose(day: string) { onChange(day); setExpanded(false); }
-  return <div className="camp-date">
+  return <div className="camp-date" onKeyDown={event=>{if(event.key==='Escape'&&expanded){event.preventDefault();event.stopPropagation();setExpanded(false);}}}>
     {name && <input type="hidden" name={name} value={value} />}
     <button type="button" className="date-trigger" aria-label={label} aria-expanded={expanded} onClick={() => { setMonth(value.slice(0, 7)); setExpanded(!expanded); }}><CalendarDays size={16} /><span>{dateText(value)}</span><span className="date-edit">{expanded ? 'Close' : 'Change'}</span></button>
     {expanded && <div className="inline-calendar" role="group" aria-label={`${label} calendar`}>

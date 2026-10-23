@@ -18,7 +18,7 @@ export function useCamp(){
  },[forget]);
  const refresh=useCallback(async()=>{const fresh=await fetchCamp();if(!vaultActor()){current.current=fresh;setCamp(fresh);return fresh;}if(vaultActor()!==fresh.user.id){forget();throw new AuthenticationError('The signed-in account changed. Unlock the correct staff account.');}current.current=fresh;await write('camp',fresh);if(vaultActor()===fresh.user.id)setCamp(fresh);return fresh;},[fetchCamp,forget]);
  const sync=useCallback(async()=>{
-  if(syncLock.current||!navigator.onLine)return;if(!vaultActor()){try{await refresh();}catch(err){setError((err as Error).message);}return;}syncLock.current=true;setSyncing(true);
+  if(syncLock.current||!navigator.onLine)return;if(!vaultActor()){try{await refresh();}catch(err){if(err instanceof TypeError)setOnline(false);else setError((err as Error).message);}return;}syncLock.current=true;setSyncing(true);
   try{const fresh=await refresh();for(const command of await queue()){
    if(!vaultActor()||command.actor!==fresh.user.id)break;
    try{const response=await fetch('/api/command',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(command)});const result=await response.json() as {error?:string;message?:string;next?:string};
@@ -72,5 +72,5 @@ export function useCamp(){
   if(acceptsOffline&&vaultActor()){await enqueue(command);setPending(await queue());setNotice('Encrypted on this device. Waiting to sync.');if(navigator.onLine){await sync();if(vaultActor()&&!(await queue()).some(item=>item.id===command.id))setNotice('Saved. Your care team can now see this record.');}return;}
   const response=await fetch('/api/command',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(command)});const result=await response.json() as {error?:string;message?:string;next?:string};if(!response.ok)throw Error(result.error||'The change could not be saved.');await refresh();setNotice('Changes saved.');
  };
- return {camp,loading,online,pending,syncing,syncErrors,error,setError,notice,setNotice,send,sync,refresh,gate,offlineEnabled:Boolean(vaultActor()),enableOffline:async()=>{const actor=current.current?.user.id;if(!actor)throw Error('Sign in first.');setDeviceActor(actor);setGate(await hasVault(actor)?'locked':'setup');},vaults,deviceActor,setDeviceActor,unlockDevice,closeSession,lockDevice:closeSession};
+ return {camp,loading,online,pending,syncing,syncErrors,error,setError,notice,setNotice,send,sync,refresh,gate,cancelOffline:()=>{if(current.current){setError('');setGate('ready');}},offlineEnabled:Boolean(vaultActor()),enableOffline:async()=>{const actor=current.current?.user.id;if(!actor)throw Error('Sign in first.');setDeviceActor(actor);setGate(await hasVault(actor)?'locked':'setup');},vaults,deviceActor,setDeviceActor,unlockDevice,closeSession,lockDevice:closeSession};
 }
