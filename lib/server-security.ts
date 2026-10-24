@@ -23,7 +23,7 @@ export function failure(error:unknown){
   const status=error instanceof RequestError?error.status:error instanceof ValidationError?400:503;
   const requestId=crypto.randomUUID();
   if(!expected)console.error('Camp request failed',{requestId,kind:error instanceof Error?error.name:'Unknown'});
-  return Response.json({error:expected?error.message:'The service could not complete this request. Try again or contact the camp administrator.',requestId},{status,headers:{...secureHeaders,...(status===429?{'Retry-After':'60'}:{})}});
+  return Response.json({error:expected?error.message:'We could not complete this request. Try again. If it keeps happening, contact your camp administrator.',requestId},{status,headers:{...secureHeaders,...(status===429?{'Retry-After':'60'}:{})}});
 }
 export function requireSameOrigin(request:Request){
   const config=runtime();

@@ -15,7 +15,7 @@ export function useCamp(){
  const forget=useCallback(()=>{const actor=vaultActor();lockVault();current.current=null;setCamp(null);setPending([]);setSyncErrors({});setGate(actor?'locked':'signed-out');if(actor)setDeviceActor(actor);},[]);
  const fetchCamp=useCallback(async()=>{
   const response=await fetch('/api/camp',{cache:'no-store'});const result=await response.json() as Camp&{error?:string};
-  if(!response.ok){if([401,403].includes(response.status)){try{if(vaultActor())await write('camp',null);}finally{forget();setGate('signed-out');}throw new AuthenticationError(result.error||'Sign in to continue.',response.status);}throw Error(result.error||'The camp could not be opened.');}
+  if(!response.ok){if([401,403].includes(response.status)){try{if(vaultActor())await write('camp',null);}finally{forget();setGate('signed-out');}throw new AuthenticationError(result.error||'Sign in to continue.',response.status);}throw Error(result.error||'We could not load the camp record. Check your connection and try again.');}
   return result;
  },[forget]);
  const refresh=useCallback(async()=>{const fresh=await fetchCamp();if(!vaultActor()){current.current=fresh;setCamp(fresh);return fresh;}if(vaultActor()!==fresh.user.id){forget();throw new AuthenticationError('The signed-in account changed. Unlock the correct staff account.');}current.current=fresh;await write('camp',fresh);if(vaultActor()===fresh.user.id)setCamp(fresh);return fresh;},[fetchCamp,forget]);
@@ -25,7 +25,7 @@ export function useCamp(){
    if(!vaultActor()||command.actor!==fresh.user.id)break;
    try{const response=await fetch('/api/command',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(command)});const result=await response.json() as {error?:string;message?:string;next?:string};
     if([401,403].includes(response.status)){await refresh();}
-    if(!response.ok){setSyncErrors(previous=>({...previous,[command.id]:result.error||'This entry needs review.'}));if(response.status===429)break;continue;}
+    if(!response.ok){setSyncErrors(previous=>({...previous,[command.id]:result.error||'This entry has not synced. Open it here to check the details.'}));if(response.status===429)break;continue;}
     await dequeue(command.id);setSyncErrors(previous=>{const next={...previous};delete next[command.id];return next;});
    }catch(err){if(err instanceof AuthenticationError)throw err;setOnline(false);break;}
   }if(vaultActor()){setPending(await queue());await refresh();}}
@@ -50,14 +50,14 @@ export function useCamp(){
   const actor=fresh?.user.id||deviceActor;if(!actor)throw Error('Sign in online before setting up this device.');
   if(await hasVault(actor))await unlockVault(actor,passphrase);else{if(!fresh)throw Error('Connect to set up this device.');await createVault(actor,fresh.user.email,passphrase);}
   try{const data=fresh||await read<Camp>('camp');if(!data||data.user.id!==actor)throw Error('Connect and sign in to refresh this account.');
-   if(!fresh&&(!data.offlineExpiresAt||Date.parse(data.offlineExpiresAt)<Date.now()))throw Error('Offline access expired. Reconnect and sign in. Pending entries remain protected.');
+   if(!fresh&&(!data.offlineExpiresAt||Date.parse(data.offlineExpiresAt)<Date.now()))throw Error('Offline access has expired. Connect and sign in again. Your unsynced entries are still encrypted on this device.');
    current.current=data;await write('camp',data);setCamp(data);setPending(await queue());setDeviceActor(actor);setVaults(await listVaults());setGate('ready');lastActivity.current=Date.now();setError('');if(fresh)void sync();
   }catch(err){lockVault();throw err;}
  };
  const closeSession=async()=>{
   try{if(vaultActor())await write('camp',null);}finally{forget();setGate('signed-out');}
   const response=await fetch('/api/auth/logout',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
-  if(!response.ok)throw Error('Device locked. Reconnect to finish closing the server session.');
+  if(!response.ok)throw Error('This device is locked. Connect again to finish signing out.');
   const result=await response.json() as {error?:string;message?:string;next?:string};location.assign(result.next==='/signout-with-chatgpt?return_to=/'?result.next:'/');
  };
  useEffect(()=>{const active=()=>{lastActivity.current=Date.now();};window.addEventListener('pointerdown',active);window.addEventListener('keydown',active);
@@ -71,8 +71,8 @@ export function useCamp(){
   const acceptsOffline=['reading','note','exception','administration','review'].includes(type);
   if((!navigator.onLine||!online)&&!acceptsOffline)throw Error('Reconnect to save this change.');
   if(!vaultActor()&&(!navigator.onLine||!online))throw Error('Reconnect to save this entry. You can enable protected offline access in Camp settings.');
-  if(acceptsOffline&&vaultActor()){await enqueue(command);setPending(await queue());setNotice('Encrypted on this device. Waiting to sync.');if(navigator.onLine){await sync();if(vaultActor()&&!(await queue()).some(item=>item.id===command.id))setNotice('Saved. Your care team can now see this record.');}return;}
-  const response=await fetch('/api/command',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(command)});const result=await response.json() as {error?:string;message?:string;next?:string};if(!response.ok)throw Error(result.error||'The change could not be saved.');await refresh();setNotice('Changes saved.');
+  if(acceptsOffline&&vaultActor()){await enqueue(command);setPending(await queue());setNotice('Saved securely on this device. Waiting to sync.');if(navigator.onLine){await sync();if(vaultActor()&&!(await queue()).some(item=>item.id===command.id))setNotice('Synced to the camp record. The care team can now see this entry.');}return;}
+  const response=await fetch('/api/command',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(command)});const result=await response.json() as {error?:string;message?:string;next?:string};if(!response.ok)throw Error(result.error||'We could not save this change. Check the details and try again.');await refresh();setNotice('Saved to the camp record.');
  };
  return {camp,loading,online,pending,syncing,syncErrors,syncProblem,error,setError,notice,setNotice,send,sync,refresh,gate,cancelOffline:()=>{if(current.current){setError('');setGate('ready');}},offlineEnabled:Boolean(vaultActor()),enableOffline:async()=>{const actor=current.current?.user.id;if(!actor)throw Error('Sign in first.');setDeviceActor(actor);setGate(await hasVault(actor)?'locked':'setup');},vaults,deviceActor,setDeviceActor,unlockDevice,closeSession,lockDevice:closeSession};
 }

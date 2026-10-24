@@ -38,5 +38,5 @@ export function CampTime({ value, onChange }: { value: string; onChange: (value:
     if (number > (part === 0 ? 23 : 59)) return;
     const pieces = value.split(':'); pieces[part] = text.padStart(2, '0'); onChange(pieces.join(':'));
   }
-  return <div className="camp-time"><Clock3 size={16} /><input type="hidden" name="measurementTime" value={value} /><input aria-label="Measurement hour" type="number" min="0" max="23" value={parts[0]} onFocus={event => event.target.select()} onChange={event => update(0, event.target.value)} required /><span>:</span><input aria-label="Measurement minute" type="number" min="0" max="59" value={parts[1]} onFocus={event => event.target.select()} onChange={event => update(1, event.target.value)} required /><small>GMT · 24h</small></div>;
+  return <div className="camp-time"><Clock3 size={16} /><input type="hidden" name="measurementTime" value={value} /><input aria-label="Hour (24-hour clock)" type="number" min="0" max="23" value={parts[0]} onFocus={event => event.target.select()} onChange={event => update(0, event.target.value)} required /><span>:</span><input aria-label="Minute" type="number" min="0" max="59" value={parts[1]} onFocus={event => event.target.select()} onChange={event => update(1, event.target.value)} required /><small>GMT · 24h</small></div>;
 }

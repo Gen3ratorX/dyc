@@ -263,3 +263,7 @@ button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #00
 .topbar .connection-link.sync-offline{color:#9a5b28}
 .topbar .sync-now{min-height:44px;min-width:40px;width:40px;border-left:1px solid #e0e8f0;border-radius:0}
 @media(max-width:760px){.topbar .connection-link{min-width:36px;padding:7px}.topbar .connection-link.sync-attention,.topbar .connection-link.sync-pending{box-shadow:inset 0 -3px 0 currentColor}.topbar .sync-now{min-width:32px;width:32px}}
+
+.report-empty-hint{font-size:12px;line-height:1.6;margin-top:12px;padding:12px;background:#f1f7fc;border-radius:8px;color:#526f8d}.modal-footer .save-status{max-width:230px;line-height:1.5}.staff-summary{row-gap:8px}
+
+.page-heading .eyebrow{display:none}
