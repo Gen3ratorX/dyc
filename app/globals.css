@@ -204,3 +204,24 @@ button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #00
 .session-cleanup-warning{display:block;margin-top:8px;color:#8a4b1c}
 
 .modal .access-password input{min-height:52px}.modal .access-password .password-toggle{width:44px;height:44px;min-height:44px}
+
+/* Staff workspaces put the next care task before camp administration. */
+.staff-workspace .environment-line,.staff-workspace .care-signature,.staff-workspace .page-heading .eyebrow,.staff-workspace .page-footer{display:none}
+.staff-workspace .page-heading{margin-top:4px;margin-bottom:24px}
+.staff-workspace .page-heading h1{font-size:clamp(28px,3vw,38px)}
+.staff-workspace .heading-dot{display:none}
+.staff-workspace .overview-columns{grid-template-columns:minmax(0,1fr)}
+.staff-workspace .care-day-note{margin-top:16px}
+.staff-workspace .settings-grid{grid-template-columns:minmax(0,760px)}
+.staff-workspace .registry-summary{margin-bottom:20px}
+.staff-summary{display:flex;align-items:center;flex-wrap:wrap;gap:12px 28px;padding:0 0 24px;color:var(--muted,#667d98);font-size:14px}
+.staff-summary>span,.staff-summary>button{display:inline-flex;align-items:center;gap:8px}
+.staff-summary strong{color:var(--navy,#002b55);font-size:20px;font-weight:700}
+.staff-summary>button{border:0;background:transparent;padding:8px 0;color:var(--blue,#007fc3);box-shadow:none;min-height:44px}
+.capacity-controls{margin-top:24px;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;border-top:1px solid #dce6f0;padding-top:20px}
+.capacity-controls>span{font-size:14px;color:#637b96}
+.capacity-controls button,.account-sync-link button{display:inline-flex;align-items:center;gap:10px;min-height:44px}
+.capacity-explanation{margin:0 0 24px;color:#56718d;line-height:1.7}
+.account-sync-link{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:22px 0;border-top:1px solid #e1e9f1}
+.account-sync-link h3{font-size:15px;margin:0 0 6px}.account-sync-link p{font-size:14px;color:#637b96;margin:0}
+@media(max-width:640px){.staff-summary{gap:4px 18px;padding-bottom:16px;font-size:12px}.staff-summary strong{font-size:18px}.account-sync-link{align-items:flex-start;flex-direction:column;gap:12px}.capacity-controls{align-items:flex-start;flex-direction:column}.capacity-controls button{width:100%;justify-content:center}.staff-workspace .page-heading{margin-bottom:20px}}

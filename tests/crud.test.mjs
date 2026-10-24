@@ -36,6 +36,24 @@ async function send(type,payload,warrior,extra={}){const body={id:crypto.randomU
 const expect=async(promise,status)=>{const r=await promise;assert.equal(r.status,status,JSON.stringify(r.data));return r;};
 const created=await expect(send('register',{name:'Synthetic warrior',age:12,group:'Group A',contact:'Synthetic contact',guardian:'Synthetic guardian',allergies:'Synthetic allergy'}),200);
 const warrior='W-'+created.body.id;
+await expect(send('capacity',{capacity:0,baseCapacity:300}),400);
+await expect(send('capacity',{capacity:10001,baseCapacity:300}),400);
+await expect(send('capacity',{capacity:1,baseCapacity:300}),200);
+await expect(send('register',{name:'Over limit',age:12,group:'Group A'}),409);
+as('doctor');await expect(send('capacity',{capacity:500,baseCapacity:1}),403);
+as('owner');actor.owner=false;await expect(send('capacity',{capacity:500,baseCapacity:1}),403);
+as('admin');await expect(send('capacity',{capacity:2,baseCapacity:1}),200);
+await expect(send('capacity',{capacity:500,baseCapacity:1}),409);
+as('owner');beforeBatch=()=>sqlite.prepare("INSERT INTO warriors VALUES('RACE-PARTICIPANT','Synthetic second warrior',12,'Group A','','','','Unknown',1)").run();
+await expect(send('register',{name:'Racing third warrior',age:12,group:'Group A'}),409);
+assert.equal(sqlite.prepare('SELECT count(*) n FROM warriors').get().n,2);
+await expect(send('capacity',{capacity:1,baseCapacity:2}),409);
+as('admin');beforeBatch=()=>sqlite.prepare("UPDATE settings SET value='6' WHERE key='camp_capacity'").run();
+await expect(send('capacity',{capacity:500,baseCapacity:2}),409);
+assert.equal(sqlite.prepare("SELECT value FROM settings WHERE key='camp_capacity'").get().value,'6');
+await expect(send('capacity',{capacity:500,baseCapacity:6}),200);
+as('owner');
+
 const at=new Date(Date.now()-60000).toISOString(),day=new Date(Date.parse(at)-21600000).toISOString().slice(0,10);
 const reading={value:6.2,unit:'mmol/L',slot:'Waking',method:'Finger-prick glucometer',measuredAt:at,careDay:day};
 await expect(send('reading',{...reading,measuredAt:day+'T24:00:00Z'} ,warrior),400);
@@ -90,7 +108,7 @@ beforeBatch=()=>sqlite.prepare("UPDATE members SET groups_json='[\"Group B\"]' W
 await expect(send('members',{...permission,revision:memberRevision(updated),active:true}),409);
 assert.equal(sqlite.prepare("SELECT active FROM members WHERE user_id='mentor'").get().active,0);
 as('admin');await expect(send('register',{name:'Denied',age:12,group:'Group A'}),403);
-const adminCamp=await(await camp.GET()).json();assert.equal(adminCamp.warriors.length,0);assert.ok(adminCamp.members.every(m=>typeof m.revision==='string'));
+const adminCamp=await(await camp.GET()).json();assert.equal(adminCamp.capacity,500);assert.equal(adminCamp.participantCount,2);assert.equal(adminCamp.warriors.length,0);assert.ok(adminCamp.members.every(m=>typeof m.revision==='string'));
 as('coordinator');const coordinator=await(await camp.GET()).json();assert.equal(coordinator.entries.length,0);assert.equal(coordinator.warriors[0].allergies,undefined);
 as('analyst');const analyst=await(await camp.GET()).json();assert.ok(analyst.warriors.every(w=>!w.contact&&!w.guardian));assert.ok(analyst.entries.every(e=>e.kind==='reading'&&!e.author&&!e.payload.note));
 const exported=await exportsRoute.POST(new Request('https://camp.test/api/exports',{method:'POST',headers:{Origin:'https://camp.test','Content-Type':'application/json'},body:JSON.stringify({careDay:day,scope:'All groups'})}));assert.equal(exported.status,200);const csv=await exported.text();assert.ok(!csv.includes(warrior)&&!csv.includes('owner@example.invalid'));
@@ -107,6 +125,11 @@ if(process.env.DYC_CRUD_SQL_OUTPUT){
 const ui=readFileSync('app/pilot.tsx','utf8');
 assert.ok(ui.includes('payload.baseVersion = formVersions.current.regimen'));
 assert.ok(ui.includes('payload.version = formVersions.current.warrior'));
+assert.ok(ui.includes('payload.baseCapacity=formVersions.current.capacity'));
 assert.ok(ui.includes('const regimen = formRegimen;'));
+const {workspaceExperience}=await import(encode(compile('lib/workspace-experience.ts')));
+for(const role of ['doctor','nurse','mentor']){const x=workspaceExperience(role);assert.equal(x.home,'Overview');assert.equal(x.navigation.includes('Sync centre'),false);assert.equal(x.titles.Settings,'My account');}
+assert.equal(workspaceExperience('coordinator').home,'Warriors');assert.equal(workspaceExperience('analyst').home,'Reports');assert.equal(workspaceExperience('administrator').home,'Settings');assert.equal(workspaceExperience('medical_lead',true).admin,true);assert.equal(workspaceExperience('mentor').navigation.includes('Reports'),false);
+console.log('Capacity checks passed: admin/owner only, numeric limits, stale settings, minimum registered count, full-camp refusal and concurrent registration guard. Role-specific navigation and home screens passed.');
 console.log('CRUD route checks passed: persisted creates/reads, idempotent retries, stale writes, prescription history, administrations, review lifecycle, scoped writes during reassignment, handover suspension race, staff permission CAS, session suspension, field filtering and audited exports.');
 delete globalThis.__dycTestContext;sqlite.close();

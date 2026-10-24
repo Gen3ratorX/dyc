@@ -6,10 +6,10 @@ export type Entry = {id:string;warrior_id:string;kind:string;care_day:string;mea
 export type Review = {id:string;warrior_id:string;reason:string;status:string;owner:string;proposed_owner:string|null;version:number;created_at:string;outcome:string};
 export type Regimen = {id:string;warrior_id:string;medicine:string;dose:string;instructions:string;author:string;at:string;version:number};
 export type Member = {email:string;role:Role;groups:string[];active?:boolean;isOwner?:boolean;revision?:string};
-export type Camp = {mode?:'demo'|'production';offlineExpiresAt?:string;authProvider?:'sites'|'supabase';user:{email:string;name:string;role:Role;groups:string[];owner:boolean;id:string};warriors:Warrior[];entries:Entry[];reviews:Review[];regimens:Regimen[];members:Member[];serverTime:string};
+export type Camp = {capacity?:number;participantCount?:number;mode?:'demo'|'production';offlineExpiresAt?:string;authProvider?:'sites'|'supabase';user:{email:string;name:string;role:Role;groups:string[];owner:boolean;id:string};warriors:Warrior[];entries:Entry[];reviews:Review[];regimens:Regimen[];members:Member[];serverTime:string};
 export type Command = {id:string;type:string;warrior?:string;payload:Record<string,any>;createdAt:string;actor:string};
 export function careDay(at:string){const d=new Date(new Date(at).getTime()-6*3600000);return d.toISOString().slice(0,10);}
-export function can(role:Role, action:string){const map:Record<string,readonly string[]>={reading:['medical_lead','doctor','nurse','mentor'],note:['medical_lead','doctor','nurse','mentor'],review:['medical_lead','doctor','nurse','mentor'],exception:['medical_lead','doctor','nurse'],regimen:['medical_lead','doctor'],administration:['medical_lead','doctor','nurse'],transition:['medical_lead','doctor'],register:['medical_lead','coordinator'],assignment:['medical_lead','coordinator'],members:['medical_lead','administrator'],seed:['medical_lead']};return (map[action]||[]).includes(role);}
+export function can(role:Role, action:string){const map:Record<string,readonly string[]>={reading:['medical_lead','doctor','nurse','mentor'],note:['medical_lead','doctor','nurse','mentor'],review:['medical_lead','doctor','nurse','mentor'],exception:['medical_lead','doctor','nurse'],regimen:['medical_lead','doctor'],administration:['medical_lead','doctor','nurse'],transition:['medical_lead','doctor'],register:['medical_lead','coordinator'],assignment:['medical_lead','coordinator'],members:['medical_lead','administrator'],seed:['medical_lead'],capacity:['medical_lead','administrator']};return (map[action]||[]).includes(role);}
 export class ValidationError extends Error { constructor(message:string){super(message);this.name='ValidationError';} }
 const invalid=(message:string):never=>{throw new ValidationError(message);};
 export function validDay(value:unknown):value is string {
@@ -20,9 +20,10 @@ function bounded(value:unknown,label:string,max:number,required=false){if(value=
 function version(value:unknown,label='Version'){if(!Number.isSafeInteger(value)||Number(value)<0)invalid(label+' is invalid. Refresh and try again.');}
 export function validate(type:string,p:Record<string,any>){
  if(!p||typeof p!=='object'||Array.isArray(p))invalid('Entry details must be an object.');
- if(!['reading','note','exception','administration','review','transition','regimen','register','assignment','members','seed'].includes(type))invalid('Unknown action.');
+ if(!['reading','note','exception','administration','review','transition','regimen','register','assignment','members','seed','capacity'].includes(type))invalid('Unknown action.');
  rejectCredentials(p);
  bounded(p.note,'Note',4000);bounded(p.overrideReason,'Care-day explanation',1000);
+ if(type==='capacity'){if(!Number.isInteger(p.capacity)||p.capacity<1||p.capacity>10000||!Number.isInteger(p.baseCapacity)||p.baseCapacity<1)invalid('Enter a participant limit between 1 and 10,000.');}
  if(type==='reading'){
   if(!slots.includes(p.slot)&&p.slot!=='Unscheduled')invalid('Choose a valid check.');
   if(!['Finger-prick glucometer','CGM transcription','Laboratory transcription'].includes(p.method))invalid('Choose a measurement method.');
@@ -45,6 +46,7 @@ export function validate(type:string,p:Record<string,any>){
  if(type==='transition'){if(p.action!==undefined&&!['handover','accept'].includes(p.action))invalid('Choose a valid review action.');bounded(p.reviewId,'Review',100,true);version(p.version);if(p.version<1)invalid('Refresh the review first.');bounded(p.outcome,'Clinical outcome',4000);if(p.action==='handover'){bounded(p.to,'Incoming owner',254,true);}else if(p.action!=='accept'&&!['Acknowledged','In progress','Resolved','Reopened'].includes(p.status))invalid('Choose a valid review action.');}
  if(type==='members'){bounded(p.revision,'Staff access revision',2000);if(['doctor','nurse','mentor'].includes(p.role)&&(!Array.isArray(p.groups)||!p.groups.length))invalid('Assign at least one group for this role.');if(p.active!==undefined&&typeof p.active!=='boolean')invalid('Staff status is invalid.');if(typeof p.email!=='string'||p.email.length>254||! /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email)||!roles.includes(p.role)||!Array.isArray(p.groups)||p.groups.length>20||p.groups.some((g:any)=>typeof g!=='string'||!/^Group [A-T]$/.test(g)))invalid('Enter a valid staff email, role and assigned groups.');}
 }
+export function campCapacity(value:string|null|undefined){const capacity=value===undefined||value===null?300:Number(value);if(!Number.isInteger(capacity)||capacity<1||capacity>10000)throw new Error('Camp capacity needs administrator review.');return capacity;}
 // A permission revision is a comparison token, not an authorization credential.
 export function memberRevision(member:{role:string;groups_json:string;active:number}){return JSON.stringify([member.role,JSON.parse(member.groups_json),member.active]);}
 export function rejectCredentials(value:unknown){

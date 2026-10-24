@@ -1,3 +1,6 @@
+import {workspaceExperience} from '../../../../lib/workspace-experience';
+import {workspaceHref} from '../../../../lib/navigation';
+import type {Role} from '../../../../lib/domain';
 import { authClient } from '../../../../lib/staff-auth';
 import { createStaffSession } from '../../../../lib/staff-sessions';
 import { failure, rateLimit, RequestError, requireSameOrigin, runtime, secureHeaders } from '../../../../lib/server-security';
@@ -25,5 +28,5 @@ export async function POST(request:Request){try{
     throw new RequestError('401:Staff email or password is incorrect, or access has not been approved.');
   }
   await createStaffSession(data.user.id);
-  return Response.json({ok:true,next:member?.role==='administrator'?'/settings':'/'},{headers:secureHeaders});
+  return Response.json({ok:true,next:workspaceHref({tab:workspaceExperience((member?.role||'medical_lead') as Role).home})},{headers:secureHeaders});
 }catch(error){return failure(error);}}
