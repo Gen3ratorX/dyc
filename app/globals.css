@@ -234,3 +234,23 @@ button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #00
 .breadcrumb-trail>svg{flex-shrink:0;color:#9cb0c4}
 .breadcrumb-trail strong{min-width:50px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media(max-width:760px){.breadcrumb-trail{gap:6px;font-size:10px;padding:3px 2px}.breadcrumb-trail strong{max-width:110px!important;font-size:10px!important}.breadcrumb-trail>svg{width:10px}.topbar .breadcrumb{gap:4px}.breadcrumb-trail a{min-height:44px}}
+
+/* The staff identity opens a compact account menu. */
+.account-switcher{position:relative;border-top:1px solid #ffffff24;padding-top:16px}
+.account-switcher .identity{border:1px solid transparent;border-radius:10px;padding:10px 8px;min-height:64px;font-size:inherit}
+.account-switcher .identity strong{max-width:150px;font-size:12px;text-align:left;overflow-wrap:anywhere}
+.account-switcher .identity small{font-size:11px;text-align:left}
+.account-switcher .identity-avatar{background:#b5efff;color:#00305a;width:36px;height:36px;font-size:12px}
+.account-switcher .identity:hover,.account-switcher .identity.account-open{background:#ffffff0d;border-color:#ffffff24}
+.account-switcher .identity>svg{transition:transform .15s}
+.account-switcher .identity.account-open>svg{transform:rotate(180deg)}
+.account-menu{position:absolute;bottom:calc(100% + 8px);left:0;right:0;background:#fff;border:1px solid #dae6ef;border-radius:12px;box-shadow:0 12px 40px #001b3b38;padding:8px;z-index:30;color:#163650}
+.account-menu-label{display:block;font-size:9px;letter-spacing:1.3px;font-weight:650;color:#788da2;padding:8px 10px}
+.account-menu button[role=menuitem]{width:100%;display:flex;justify-content:flex-start;text-align:left;gap:9px;min-height:44px;padding:10px 9px;background:transparent;border:0;box-shadow:none;border-radius:7px;font-size:11px;color:#254664;font-weight:550;white-space:normal}
+.account-menu button[role=menuitem]:hover,.account-menu button[role=menuitem]:focus-visible{background:#edf7ff;color:#007cbf}
+.account-menu button[role=menuitem]>svg{flex-shrink:0}
+.account-menu b{margin-left:auto;background:#e3f6ff;padding:1px 5px;border-radius:4px;font-size:10px}
+.account-menu-divider{height:1px;background:#e3ebf2;margin:6px 3px}
+.account-menu button.account-signout{color:#9b3546}
+.account-menu button.account-signout:hover{background:#fff0f2;color:#92293c}
+@media(max-width:760px){.account-menu button[role=menuitem]{font-size:13px;min-height:48px}.account-switcher .identity strong{font-size:13px;max-width:165px}}
