@@ -9,7 +9,7 @@ import {
   Wifi, X, LogOut, RefreshCw, Clock3, CalendarDays, SlidersHorizontal, Pill, LockKeyhole,
 } from 'lucide-react';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { can, careDay, csv, roles, slots, type Entry, type Review, type Warrior, type Member } from '../lib/domain';
+import { can, careDay, csv, roles, slots, type Entry, type Review, type Warrior, type Member, type Regimen } from '../lib/domain';
 import { useCamp } from '../lib/use-camp';
 import LiveClock from './clock';
 import {PasswordField} from './password-field';
@@ -69,6 +69,7 @@ export default function Pilot() {
   const [modal, setModal] = useState<string | null>(null);
   const modalSupportsOffline=['reading','note','exception','administration','review'].includes(modal||'');
   const [formWarriorId, setFormWarriorId] = useState('');
+  const [formRegimen,setFormRegimen]=useState<Regimen|undefined>();
   const [readingValue,setReadingValue]=useState('');
   const validReadingValue=['HI','LO'].includes(readingValue.trim().toUpperCase())||(readingValue.trim()!==''&&Number.isFinite(Number(readingValue))&&Number(readingValue)>0);
   const [formSlot, setFormSlot] = useState<string>('Waking');
@@ -79,6 +80,7 @@ export default function Pilot() {
   const [exporting,setExporting]=useState(false);
   const [formDirty,setFormDirty]=useState(false),[confirmDiscard,setConfirmDiscard]=useState(false);
   const [editingMember,setEditingMember]=useState<Member|null>(null);
+  const formVersions=useRef<{regimen:number;warrior:number}>({regimen:0,warrior:0});
   const [memberRole,setMemberRole]=useState('mentor');
   const dirtyRef=useRef(false);dirtyRef.current=formDirty;const busyRef=useRef(false);busyRef.current=busy;
   const sidebarRef=useRef<HTMLElement>(null);
@@ -97,7 +99,7 @@ export default function Pilot() {
   const reviews = camp?.reviews || [];
   const selected = warriors.find(warrior => warrior.id === selectedId);
   const formWarrior = warriors.find(warrior => warrior.id === formWarriorId);
-  const regimen = camp?.regimens.find(item => item.warrior_id === formWarriorId);
+  const regimen = formRegimen;
   const selectedRegimen = camp?.regimens.find(item => item.warrior_id === selectedId);
   const ownQueue = pending.filter(item => item.actor === user?.id);
   const activeReviews = reviews.filter(review => review.status !== 'Resolved');
@@ -211,6 +213,8 @@ export default function Pilot() {
     if(!['register','members','account','password'].includes(type)&&!warriors.length){setModal('no-warriors');setError('');return;}
     setReadingValue('');setFormDirty(false);setConfirmDiscard(false);setEditingMember(null);setMemberRole('mentor');
     const target = warrior || (tab === 'Warrior' ? selected : undefined) || roster[0] || warriors[0];
+    setFormRegimen(camp?.regimens.find(item=>item.warrior_id===target?.id));
+    formVersions.current={regimen:camp?.regimens.find(item=>item.warrior_id===target?.id)?.version||0,warrior:target?.version||0};
     setFormWarriorId(target?.id || '');
     setFormSlot(slot || (checkFilter === 'All checks' ? 'Waking' : checkFilter));
     const now = new Date();
@@ -247,12 +251,12 @@ export default function Pilot() {
         payload.slot = formSlot;
       }
       if (modal === 'register') payload.age = Number(payload.age);
-      if (modal === 'regimen') payload.baseVersion = regimen?.version || 0;
+      if (modal === 'regimen') payload.baseVersion = formVersions.current.regimen;
       if (modal === 'administration') {
         payload.dose = Number(payload.dose); payload.regimenId = regimen?.id;
         payload.medicine = regimen?.medicine; payload.regimenSeenAt = camp?.serverTime;
       }
-      if (modal === 'assignment') payload.version = formWarrior?.version;
+      if (modal === 'assignment') payload.version = formVersions.current.warrior;
       if(modal==='account'||modal==='password'){
         if(modal==='account'){payload.groups=new FormData(event.currentTarget).getAll('groups').map(String);if(payload.password!==payload.confirmPassword)throw Error('The initial passwords do not match.');}
         const response=await fetch(modal==='account'?'/api/staff/accounts':'/api/auth/password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const result=await response.json() as {error?:string;sessionsClosed?:boolean};if(!response.ok)throw Error(result.error||'The request could not be completed.');
@@ -260,7 +264,7 @@ export default function Pilot() {
         if(modal==='password'){location.assign('/?password=changed'+(result.sessionsClosed===false?'&sessions=check':''));return;}
         await store.refresh();setNotice(`Account created for ${payload.email}. They can sign in with the initial password.`);return;
       }
-      if (modal === 'members') {payload.groups=new FormData(event.currentTarget).getAll('groups').map(String);payload.active=editingMember?.active!==false;if(!['medical_lead','coordinator','analyst','administrator'].includes(String(payload.role))&&!payload.groups.length)throw Error('Assign at least one group for this role.');}
+      if (modal === 'members') {payload.revision=editingMember?.revision;payload.groups=new FormData(event.currentTarget).getAll('groups').map(String);payload.active=editingMember?.active!==false;if(!['medical_lead','coordinator','analyst','administrator'].includes(String(payload.role))&&!payload.groups.length)throw Error('Assign at least one group for this role.');}
       if (modal === 'resolve' || modal === 'handover') {
         if (!reviewTarget) throw Error('Select a clinical review first.');
         await send('transition', {
