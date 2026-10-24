@@ -225,3 +225,12 @@ button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #00
 .account-sync-link{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:22px 0;border-top:1px solid #e1e9f1}
 .account-sync-link h3{font-size:15px;margin:0 0 6px}.account-sync-link p{font-size:14px;color:#637b96;margin:0}
 @media(max-width:640px){.staff-summary{gap:4px 18px;padding-bottom:16px;font-size:12px}.staff-summary strong{font-size:18px}.account-sync-link{align-items:flex-start;flex-direction:column;gap:12px}.capacity-controls{align-items:flex-start;flex-direction:column}.capacity-controls button{width:100%;justify-content:center}.staff-workspace .page-heading{margin-bottom:20px}}
+
+/* Breadcrumb ancestors are real links; the current page is a plain label. */
+.breadcrumb{flex:1;min-width:0;overflow:hidden}
+.breadcrumb-trail{display:flex;align-items:center;gap:10px;min-width:0;overflow-x:auto;scrollbar-width:none;padding:3px 4px}
+.breadcrumb-trail a{display:inline-flex;align-items:center;min-height:44px;flex-shrink:0;color:#607b97;text-decoration:underline;text-decoration-color:#b9cbdc;text-underline-offset:4px;border-radius:4px}
+.breadcrumb-trail a:hover{color:#007fc3;text-decoration-color:currentColor}
+.breadcrumb-trail>svg{flex-shrink:0;color:#9cb0c4}
+.breadcrumb-trail strong{min-width:50px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:760px){.breadcrumb-trail{gap:6px;font-size:10px;padding:3px 2px}.breadcrumb-trail strong{max-width:110px!important;font-size:10px!important}.breadcrumb-trail>svg{width:10px}.topbar .breadcrumb{gap:4px}.breadcrumb-trail a{min-height:44px}}
