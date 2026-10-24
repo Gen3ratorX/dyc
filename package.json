@@ -18,7 +18,7 @@
     "cloudflare:build": "node scripts/run-framework.mjs build",
     "cloudflare:start": "node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js dev --config dist/server/wrangler.json --local --persist-to .wrangler/state --ip 127.0.0.1 --inspector-port 0",
     "check": "tsc --noEmit",
-    "test": "node tests/domain.test.mjs && node tests/offline-crypto.test.mjs && node tests/service-worker.test.mjs && node tests/postgres.test.mjs && node tests/database-tls.test.mjs && node tests/online-session.test.mjs && node tests/navigation.test.mjs && node tests/staff-accounts.test.mjs && node tests/crud.test.mjs"
+    "test": "node tests/domain.test.mjs && node tests/offline-crypto.test.mjs && node tests/service-worker.test.mjs && node tests/postgres.test.mjs && node tests/database-tls.test.mjs && node tests/online-session.test.mjs && node tests/navigation.test.mjs && node tests/staff-accounts.test.mjs && node tests/crud.test.mjs && node tests/sync-status.test.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

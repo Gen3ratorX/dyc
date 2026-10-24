@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import ts from 'typescript';
+const source=ts.transpileModule(readFileSync('lib/sync-status.ts','utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ES2022}}).outputText;
+const {syncStatus}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
+assert.equal(syncStatus(true,false,0,0).label,'Up to date');
+assert.equal(syncStatus(true,false,3,0).label,'3 pending');
+assert.equal(syncStatus(true,false,3,1).label,'Needs attention');
+assert.equal(syncStatus(true,false,0,0,true).label,'Needs attention');
+assert.equal(syncStatus(false,false,3,1,true).label,'Offline');
+assert.equal(syncStatus(true,true,3,1,true).label,'Syncing…');
+assert.equal(syncStatus(true,false,0,0,false).state,'ready');
+console.log('Sync status checks passed: offline priority, in-progress retry, pending count, queue errors, server refresh errors and recovery.');

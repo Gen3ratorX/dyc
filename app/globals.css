@@ -254,3 +254,12 @@ button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #00
 .account-menu button.account-signout{color:#9b3546}
 .account-menu button.account-signout:hover{background:#fff0f2;color:#92293c}
 @media(max-width:760px){.account-menu button[role=menuitem]{font-size:13px;min-height:48px}.account-switcher .identity strong{font-size:13px;max-width:165px}}
+
+/* Sync state is a destination; the adjacent button runs a sync. */
+.topbar .connection-link{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:8px 10px;border:1px solid transparent;border-radius:8px;background:transparent;box-shadow:none;font-size:11px;color:#59738f;white-space:nowrap;cursor:pointer}
+.topbar .connection-link:hover{background:#eff7fd;border-color:#d8e9f6;color:#007fc3}
+.topbar .connection-link.sync-attention{color:#a75022;background:#fff5e9}
+.topbar .connection-link.sync-pending{color:#8f661f}
+.topbar .connection-link.sync-offline{color:#9a5b28}
+.topbar .sync-now{min-height:44px;min-width:40px;width:40px;border-left:1px solid #e0e8f0;border-radius:0}
+@media(max-width:760px){.topbar .connection-link{min-width:36px;padding:7px}.topbar .connection-link.sync-attention,.topbar .connection-link.sync-pending{box-shadow:inset 0 -3px 0 currentColor}.topbar .sync-now{min-width:32px;width:32px}}

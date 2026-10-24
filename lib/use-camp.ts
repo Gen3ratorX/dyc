@@ -6,9 +6,11 @@ class AuthenticationError extends Error { constructor(message:string,readonly st
 export function useCamp(){
  const [camp,setCamp]=useState<Camp|null>(null),[loading,setLoading]=useState(true),[online,setOnline]=useState(true);
  const [pending,setPending]=useState<Command[]>([]),[syncErrors,setSyncErrors]=useState<Record<string,string>>({});
+ const [syncProblem,setSyncProblem]=useState('');
  const [error,setError]=useState(''),[notice,setNotice]=useState(''),[syncing,setSyncing]=useState(false);
  const [gate,setGate]=useState<'signed-out'|'setup'|'locked'|'ready'>('signed-out');
  const [vaults,setVaults]=useState<{actor:string;label:string}[]>([]),[deviceActor,setDeviceActor]=useState('');
+ const syncErrorRef=useRef('');
  const current=useRef<Camp|null>(null),syncLock=useRef(false),lastActivity=useRef(Date.now());
  const forget=useCallback(()=>{const actor=vaultActor();lockVault();current.current=null;setCamp(null);setPending([]);setSyncErrors({});setGate(actor?'locked':'signed-out');if(actor)setDeviceActor(actor);},[]);
  const fetchCamp=useCallback(async()=>{
@@ -18,8 +20,8 @@ export function useCamp(){
  },[forget]);
  const refresh=useCallback(async()=>{const fresh=await fetchCamp();if(!vaultActor()){current.current=fresh;setCamp(fresh);return fresh;}if(vaultActor()!==fresh.user.id){forget();throw new AuthenticationError('The signed-in account changed. Unlock the correct staff account.');}current.current=fresh;await write('camp',fresh);if(vaultActor()===fresh.user.id)setCamp(fresh);return fresh;},[fetchCamp,forget]);
  const sync=useCallback(async()=>{
-  if(syncLock.current||!navigator.onLine)return;if(!vaultActor()){try{await refresh();}catch(err){if(err instanceof TypeError)setOnline(false);else setError((err as Error).message);}return;}syncLock.current=true;setSyncing(true);
-  try{const fresh=await refresh();for(const command of await queue()){
+  if(syncLock.current||!navigator.onLine)return;syncLock.current=true;setSyncing(true);if(!vaultActor()){try{await refresh();setSyncProblem('');const priorSyncError=syncErrorRef.current;syncErrorRef.current='';if(priorSyncError)setError(currentError=>currentError===priorSyncError?'':currentError);setOnline(true);}catch(err){syncErrorRef.current=(err as Error).message;setSyncProblem(syncErrorRef.current);if(err instanceof TypeError)setOnline(false);else setError((err as Error).message);}finally{syncLock.current=false;setSyncing(false);}return;}
+  try{const fresh=await refresh();setSyncProblem('');const priorSyncError=syncErrorRef.current;syncErrorRef.current='';if(priorSyncError)setError(currentError=>currentError===priorSyncError?'':currentError);setOnline(true);for(const command of await queue()){
    if(!vaultActor()||command.actor!==fresh.user.id)break;
    try{const response=await fetch('/api/command',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(command)});const result=await response.json() as {error?:string;message?:string;next?:string};
     if([401,403].includes(response.status)){await refresh();}
@@ -27,7 +29,7 @@ export function useCamp(){
     await dequeue(command.id);setSyncErrors(previous=>{const next={...previous};delete next[command.id];return next;});
    }catch(err){if(err instanceof AuthenticationError)throw err;setOnline(false);break;}
   }if(vaultActor()){setPending(await queue());await refresh();}}
-  catch(err){if(err instanceof TypeError)setOnline(false);else setError((err as Error).message);}
+  catch(err){syncErrorRef.current=(err as Error).message;setSyncProblem(syncErrorRef.current);if(err instanceof TypeError)setOnline(false);else setError((err as Error).message);}
   finally{syncLock.current=false;setSyncing(false);}
  },[refresh]);
  useEffect(()=>{
@@ -72,5 +74,5 @@ export function useCamp(){
   if(acceptsOffline&&vaultActor()){await enqueue(command);setPending(await queue());setNotice('Encrypted on this device. Waiting to sync.');if(navigator.onLine){await sync();if(vaultActor()&&!(await queue()).some(item=>item.id===command.id))setNotice('Saved. Your care team can now see this record.');}return;}
   const response=await fetch('/api/command',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(command)});const result=await response.json() as {error?:string;message?:string;next?:string};if(!response.ok)throw Error(result.error||'The change could not be saved.');await refresh();setNotice('Changes saved.');
  };
- return {camp,loading,online,pending,syncing,syncErrors,error,setError,notice,setNotice,send,sync,refresh,gate,cancelOffline:()=>{if(current.current){setError('');setGate('ready');}},offlineEnabled:Boolean(vaultActor()),enableOffline:async()=>{const actor=current.current?.user.id;if(!actor)throw Error('Sign in first.');setDeviceActor(actor);setGate(await hasVault(actor)?'locked':'setup');},vaults,deviceActor,setDeviceActor,unlockDevice,closeSession,lockDevice:closeSession};
+ return {camp,loading,online,pending,syncing,syncErrors,syncProblem,error,setError,notice,setNotice,send,sync,refresh,gate,cancelOffline:()=>{if(current.current){setError('');setGate('ready');}},offlineEnabled:Boolean(vaultActor()),enableOffline:async()=>{const actor=current.current?.user.id;if(!actor)throw Error('Sign in first.');setDeviceActor(actor);setGate(await hasVault(actor)?'locked':'setup');},vaults,deviceActor,setDeviceActor,unlockDevice,closeSession,lockDevice:closeSession};
 }
