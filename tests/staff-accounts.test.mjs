@@ -30,3 +30,11 @@ calls=[];await assert.rejects(()=>changeOwnPassword({id:'staff-self',email:'self
 const wrong=passwordDeps();wrong.provider.auth.signInWithPassword=async()=>({data:{user:null},error:{code:'invalid_credentials'}});await assert.rejects(()=>changeOwnPassword({id:'staff-self',email:'self@example.invalid'},body,wrong),/current password is incorrect/);assert.equal(calls.length,0);
 calls=[];changed=await changeOwnPassword({id:'staff-self',email:'self@example.invalid'},body,{...passwordDeps(),revokeSessions:async()=>{throw Error('Synthetic outage');}});assert.equal(changed.sessionsClosed,false);assert.ok(calls.some(c=>c[0]==='clear'));
 console.log('Staff account checks passed: administrator-only provisioning, roles/groups, duplicate protection, password boundaries, compensation, no password persistence, self-only password changes, current-password verification and session closure.');
+
+// Edge SQL bypasses the app SQL compatibility layer; reserved identifiers must
+// already be quoted before reaching Postgres.
+const edgeSource=readFileSync('supabase/functions/dyc-staff-accounts/index.ts','utf8');
+const bucketQuery=edgeSource.match(/tx\.unsafe\('([^']*INSERT INTO request_buckets[^']*)'/)?.[1];
+assert.ok(bucketQuery,'Exercise the actual Edge rate-limit statement');
+assert.ok(bucketQuery.includes('(id,requests,"window")'));
+assert.ok(!/\(id,requests,window\)/.test(bucketQuery));

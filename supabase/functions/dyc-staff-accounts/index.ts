@@ -34,7 +34,7 @@ Deno.serve(async(request:Request)=>{
      },
      rateLimit:async()=>{
       const minute=Math.floor(now/60000),bucket=`account-create:${userId}:${minute}`;
-      const rows=await tx.unsafe('INSERT INTO request_buckets (id,requests,window) VALUES ($1,1,$2) ON CONFLICT(id) DO UPDATE SET requests=request_buckets.requests+1 WHERE request_buckets.requests<10 RETURNING requests',[bucket,minute]);
+      const rows=await tx.unsafe('INSERT INTO request_buckets (id,requests,"window") VALUES ($1,1,$2) ON CONFLICT(id) DO UPDATE SET requests=request_buckets.requests+1 WHERE request_buckets.requests<10 RETURNING requests',[bucket,minute]);
       if(!rows.length)throw new StaffAccountError(429,'Too many accounts created at once. Wait one minute.');
      },
      linkedAccount:async email=>Boolean((await tx.unsafe('SELECT user_id FROM members WHERE email=$1 AND user_id IS NOT NULL',[email])).length),
