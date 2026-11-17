@@ -277,3 +277,4 @@ button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #00
 .ops-metrics button{justify-items:start}.ops-roster .ops-person:hover strong{text-decoration:underline}.ops-action-section details[open]>summary{margin-bottom:14px}.ops-action-section details .reg-field{margin-top:16px}
 
 .reg-birthday{border:0;padding:0;margin:0;min-width:0}.reg-birthday legend{font-size:14px;font-weight:650;color:#234866;margin-bottom:8px;padding:0}.reg-birthday>div{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.reg-birthday label{display:grid;gap:5px;min-width:0}.reg-birthday label>span{position:absolute;left:-10000px}.reg-birthday select{width:100%;min-height:46px;padding:10px 8px;border:1px solid #cbdde9;border-radius:10px;background:#fbfdff;font-size:14px}.reg-mobile-brand img{filter:none}@media(max-width:700px){.reg-field input,.reg-field select,.reg-field textarea,.reg-birthday select{font-size:16px}}
+.reg-trust p{color:#c6dce9}

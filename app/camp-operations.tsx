@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import type { Camp, Command } from "../lib/domain";
 import { csv } from "../lib/domain";
-import { read, write, vaultActor } from "../lib/offline";
+import { read, write, vaultActor, queue } from "../lib/offline";
 import type {
   Operations,
   OpsPerson,
@@ -30,6 +30,7 @@ import type {
   OpsTeam,
 } from "../lib/registration";
 import RegistrationForm from "./register/registration-form";
+import { registrationMatches } from "../lib/registration";
 function Dialog({
   title,
   onClose,
@@ -258,10 +259,15 @@ export default function CampOperations({
         { version: person.version, at: new Date().toISOString() },
         person.id,
       );
+      const waiting =
+        offlineEnabled &&
+        (await queue()).some(
+          (c) => c.type === "arrival" && c.warrior === person.id,
+        );
       setNotice(
-        navigator.onLine
-          ? "Arrival saved. Check documents and assignments next."
-          : "Arrival saved on this device, pending sync. Room and bed allocations require a connection.",
+        waiting
+          ? "Arrival saved on this device, pending sync. Room and bed allocations require a connection."
+          : "Arrival saved. Check documents and assignments next.",
       );
       setConfirmed(false);
       await load();
@@ -271,10 +277,7 @@ export default function CampOperations({
       setBusy(false);
     }
   };
-  const matches = (p: OpsPerson) =>
-    [p.name, p.reference, p.details.phone || "", p.id].some((v) =>
-      v.toLowerCase().includes(search.trim().toLowerCase()),
-    );
+  const matches = (p: OpsPerson) => registrationMatches(p, search);
   const filtered = (data?.people || []).filter(
     (p) =>
       matches(p) &&

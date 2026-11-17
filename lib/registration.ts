@@ -240,3 +240,31 @@ export type Operations = {
   offlineExpiresAt: string;
   actor: string;
 };
+
+export function registrationMatches(
+  p: Pick<OpsPerson, "name" | "reference" | "id" | "details">,
+  search: string,
+) {
+  const q = search.trim().toLowerCase();
+  if (
+    [p.name, p.reference, p.id, p.details.phone || ""].some((v) =>
+      v.toLowerCase().includes(q),
+    )
+  )
+    return true;
+  const reference = q.replace(/[^a-z0-9]/g, "");
+  if (
+    reference.length >= 4 &&
+    p.reference
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "")
+      .includes(reference)
+  )
+    return true;
+  const digits = q.replace(/\D/g, "");
+  return (
+    /^[+0-9\s()-]+$/.test(q) &&
+    digits.length >= 3 &&
+    (p.details.phone || "").replace(/\D/g, "").includes(digits)
+  );
+}

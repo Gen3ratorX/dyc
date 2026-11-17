@@ -9,7 +9,7 @@ const security=encode(`import {ValidationError} from '${domain}';export class Re
 const registration=encode(compile('lib/registration.ts').replaceAll("./domain",domain));
 const registrationService=encode(compile('lib/registration-service.ts').replaceAll("./domain",domain).replaceAll("./registration",registration).replaceAll("./server-security",security));
 const operationsService=encode(compile('lib/operations-service.ts').replaceAll("./registration-service",registrationService).replaceAll("./server-security",security));
-const {registrationInput,blankRegistration,campAge}=await import(registration);
+const {registrationInput,blankRegistration,campAge,registrationMatches}=await import(registration);
 const {registerParticipant}=await import(registrationService);
 const {operationWrite,operationSnapshot}=await import(operationsService);
 const sqlite=new DatabaseSync(':memory:');sqlite.exec('PRAGMA foreign_keys=ON;');
@@ -72,3 +72,7 @@ sqlite.prepare("UPDATE members SET active=0 WHERE role='checkin'").run();await a
 console.log('Registration and arrivals: eligibility, optional photos, deduplication/idempotency, capacity, clinical isolation, role/scope checks, atomic bed allocation, arrival retry/reversal, assessment and document workflow, registration closure and suspended accounts passed.');
 
 for(const path of ['app/camp-operations.tsx','app/register/registration-form.tsx'])assert.ok(!/qrcode|zxing|Scan QR|QRCode/i.test(readFileSync(path,'utf8')),'No QR generation or scanning in '+path);
+
+const lookup={id:'DYC-test',name:'Fictional Ama',reference:'DYC26-AB12-CD34-EF56',details:{phone:'+233 20 000 0000'}};
+for(const search of ['fictional ama','dyc26ab12cd34ef56','AB12 CD34 EF56','AB12-CD34-EF56','+233200000000'])assert.ok(registrationMatches(lookup,search),search);
+assert.equal(registrationMatches(lookup,'Not a participant'),false);

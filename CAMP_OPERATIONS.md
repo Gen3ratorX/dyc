@@ -48,3 +48,5 @@ Registration, edits, documents, clinical assessments and room/bed/team allocatio
 `npm test` includes the existing clinical/staff/crypto/SQL tests and isolated registration/operations integration tests. The new tests cover eligibility, optional photo refusal, submission retry and duplicate prevention, capacity, role isolation, scope checks, last-bed races, document/assessment workflow, corrections, closure and suspended staff.
 
 The migration enables RLS on all new private tables and denies direct anon/authenticated access. Production SQL privileges were exercised in a rolled-back synthetic transaction. Browser checks use fictional local fixtures; they do not insert test participants in production. Physical printing still needs rehearsal on the camp’s actual devices.
+
+Known hosting advisory: Supabase currently reports [leaked-password checking disabled](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection). This predates the arrival system. New staff passwords still use the existing minimum-length checks and individual authenticated accounts.
