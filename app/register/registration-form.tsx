@@ -6,7 +6,6 @@ import {
   type FormEvent,
   type ReactNode,
 } from "react";
-import QRCode from "qrcode";
 import {
   ArrowLeft,
   ArrowRight,
@@ -39,7 +38,6 @@ export default function RegistrationForm({
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
     [receipt, setReceipt] = useState(""),
-    [qr, setQR] = useState(""),
     [open, setOpen] = useState(true),
     [checking, setChecking] = useState(!walkin);
   const id = useRef(""),
@@ -64,14 +62,6 @@ export default function RegistrationForm({
   useEffect(() => {
     heading.current?.focus();
   }, [step, receipt]);
-  useEffect(() => {
-    if (receipt)
-      void QRCode.toDataURL(receipt, {
-        width: 240,
-        margin: 2,
-        color: { dark: "#052a50", light: "#ffffff" },
-      }).then(setQR);
-  }, [receipt]);
   const update = (key: keyof RegistrationInput, value: unknown) =>
     setData((d) => ({ ...d, [key]: value }));
   const field = (
@@ -207,14 +197,6 @@ export default function RegistrationForm({
           desk on 19 November.
         </p>
         <div className="reg-ticket">
-          {qr && (
-            <img
-              src={qr}
-              alt="Registration reference QR code"
-              width={200}
-              height={200}
-            />
-          )}
           <div>
             <span>YOUR REGISTRATION REFERENCE</span>
             <strong>{receipt}</strong>

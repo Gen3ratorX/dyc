@@ -105,7 +105,14 @@ export async function registerParticipant(
         "409:The camp has reached its participant limit. Contact the camp team for assistance.",
       );
     const id = "DYC-" + randomUUID(),
-      reference = "DYC26-" + randomUUID().replaceAll("-", "").toUpperCase(),
+      reference =
+        "DYC26-" +
+        randomUUID()
+          .replaceAll("-", "")
+          .slice(0, 12)
+          .toUpperCase()
+          .match(/.{4}/g)!
+          .join("-"),
       now = new Date().toISOString();
     await tx.query(
       "INSERT INTO warriors(id,name,age,group_name,room,guardian,contact,allergies,version) VALUES (?,?,?,?,?,?,?,?,1)",

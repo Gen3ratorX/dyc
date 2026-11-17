@@ -15,13 +15,11 @@ import {
   Home,
   Plus,
   Printer,
-  QrCode,
   RefreshCw,
   Search,
   Users,
   X,
 } from "lucide-react";
-import QRCode from "qrcode";
 import type { Camp, Command } from "../lib/domain";
 import { csv } from "../lib/domain";
 import { read, write, vaultActor } from "../lib/offline";
@@ -72,62 +70,6 @@ function Dialog({
     </dialog>
   );
 }
-function Scanner({
-  onResult,
-  onClose,
-}: {
-  onResult: (value: string) => void;
-  onClose: () => void;
-}) {
-  const video = useRef<HTMLVideoElement>(null),
-    [error, setError] = useState("");
-  useEffect(() => {
-    let cancelled = false,
-      stop: (() => void) | undefined;
-    void import("@zxing/browser")
-      .then(async ({ BrowserQRCodeReader }) => {
-        if (cancelled || !video.current) return;
-        const controls = await new BrowserQRCodeReader().decodeFromConstraints(
-          { video: { facingMode: "environment" }, audio: false },
-          video.current,
-          (result, _error, controls) => {
-            if (result && !cancelled) {
-              controls.stop();
-              onResult(result.getText());
-            }
-          },
-        );
-        stop = () => controls.stop();
-        if (cancelled) stop();
-      })
-      .catch(() =>
-        setError(
-          "Camera unavailable. Close this window and search by name, phone or reference instead.",
-        ),
-      );
-    return () => {
-      cancelled = true;
-      stop?.();
-      const stream = video.current?.srcObject;
-      if (stream instanceof MediaStream)
-        stream.getTracks().forEach((t) => t.stop());
-    };
-  }, []);
-  return (
-    <Dialog title="Scan a registration QR" onClose={onClose}>
-      <video ref={video} className="ops-scanner" muted playsInline />
-      <p>
-        Hold the registration QR inside the camera view. No medical information
-        is stored in the code.
-      </p>
-      {error && (
-        <p role="alert" className="reg-error">
-          {error}
-        </p>
-      )}
-    </Dialog>
-  );
-}
 type Props = {
   camp: Camp;
   section: string;
@@ -161,7 +103,6 @@ export default function CampOperations({
     [modal, setModal] = useState(""),
     [editing, setEditing] = useState<OpsRoom | OpsTeam | null>(null),
     [confirmed, setConfirmed] = useState(false),
-    [qr, setQr] = useState(""),
     [printMode, setPrintMode] = useState("roster");
   const loadSequence = useRef(0);
   const actor = camp.user.id,
@@ -258,11 +199,6 @@ export default function CampOperations({
 
   useEffect(() => {
     setConfirmed(false);
-    setQr("");
-    if (person)
-      void QRCode.toDataURL(person.reference, { width: 160, margin: 1 }).then(
-        setQr,
-      );
   }, [selected]);
   const mutate = async (body: Record<string, unknown>) => {
     setBusy(true);
@@ -582,10 +518,6 @@ export default function CampOperations({
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </label>
-              <button onClick={() => setModal("scanner")}>
-                <QrCode size={17} />
-                Scan QR
-              </button>
               <select
                 aria-label="Arrival roster filter"
                 value={filter}
@@ -1253,15 +1185,10 @@ export default function CampOperations({
           </section>
           <section className="ops-action-section ops-badge-section">
             <div>
-              {qr && (
-                <img
-                  src={qr}
-                  alt="Participant reference QR"
-                  width={120}
-                  height={120}
-                />
-              )}
-              <p>The QR contains only the registration reference.</p>
+              <p>
+                Print a name badge with their team, room and registration
+                reference.
+              </p>
             </div>
             <button onClick={() => print("badge")}>
               <Printer size={16} />
@@ -1294,30 +1221,6 @@ export default function CampOperations({
             </form>
           )}
         </Dialog>
-      )}
-      {modal === "scanner" && (
-        <Scanner
-          onClose={() => setModal("")}
-          onResult={(value) => {
-            setModal("");
-            if (!/^DYC26-[0-9A-F]{32}$/.test(value)) {
-              setError(
-                "This is not a camp registration QR. Search by name or reference instead.",
-              );
-              return;
-            }
-            const p = data.people.find((p) => p.reference === value);
-            if (p) {
-              setSelected(p.id);
-              setSearch("");
-            } else {
-              setSearch(value);
-              setError(
-                "No registration with that reference is available to this account. Refresh online or search by name.",
-              );
-            }
-          }}
-        />
       )}
       {modal === "walkin" && (
         <Dialog
@@ -1464,7 +1367,7 @@ export default function CampOperations({
             <h1>{person.name}</h1>
             <p>{teamLabel(person)}</p>
             <p>{roomLabel(person)}</p>
-            {qr && <img src={qr} width={140} alt="Registration QR" />}
+
             <small>{person.reference}</small>
           </div>
         ) : (

@@ -24,7 +24,7 @@ assert.equal(campAge('2001-11-19'),25);assert.equal(campAge('2001-11-20'),24);as
 assert.equal(registrationInput(sample).photoConsent,false);
 for(const change of [{dob:'2001-11-19'},{dob:'2027-01-01'},{guardianPermission:false},{type1:false},{dataConsent:false},{photoConsent:null},{emergencyPhone:'invalid'},{diagnosisYear:'2000'},{shirt:'XXXX'}])assert.throws(()=>registrationInput({...sample,...change}));
 const requestId=crypto.randomUUID(),receipt=await registerParticipant(db,sample,requestId);
-assert.match(receipt.reference,/^DYC26-[A-F0-9]{32}$/);assert.deepEqual(Object.keys(receipt),['reference']);assert.deepEqual(await registerParticipant(db,sample,requestId),receipt);
+assert.match(receipt.reference,/^DYC26-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}$/);assert.deepEqual(Object.keys(receipt),['reference']);assert.deepEqual(await registerParticipant(db,sample,requestId),receipt);
 await assert.rejects(()=>registerParticipant(db,{...sample,name:'Different'},requestId),e=>e.status===409);
 await assert.rejects(()=>registerParticipant(db,sample,crypto.randomUUID()),e=>e.status===409);
 const id=sqlite.prepare('SELECT warrior_id FROM registrations WHERE reference=?').get(receipt.reference).warrior_id;
@@ -70,3 +70,5 @@ sqlite.prepare("UPDATE settings SET value='true' WHERE key='registration_open'")
 await operationWrite(db,desk,{action:'contacts',warrior:id,version:version(),name:'Corrected fictional name',phone:'0200000003',guardian:'Fictional Guardian',emergencyName:'Fictional Contact',emergencyPhone:'0200000001',emergencyPhone2:'0200000002',diet:'None',reason:'Fictional spelling correction'});assert.equal(sqlite.prepare('SELECT name FROM warriors WHERE id=?').get(id).name,'Corrected fictional name');
 sqlite.prepare("UPDATE members SET active=0 WHERE role='checkin'").run();await assert.rejects(()=>operationWrite(db,desk,{action:'documents',warrior:id,version:version(),verified:false}),e=>e.status===403);
 console.log('Registration and arrivals: eligibility, optional photos, deduplication/idempotency, capacity, clinical isolation, role/scope checks, atomic bed allocation, arrival retry/reversal, assessment and document workflow, registration closure and suspended accounts passed.');
+
+for(const path of ['app/camp-operations.tsx','app/register/registration-form.tsx'])assert.ok(!/qrcode|zxing|Scan QR|QRCode/i.test(readFileSync(path,'utf8')),'No QR generation or scanning in '+path);
