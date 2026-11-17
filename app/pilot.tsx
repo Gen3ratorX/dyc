@@ -234,7 +234,7 @@ export default function Pilot() {
       event.preventDefault();navigate(destination,options);
     }};
   }
-  useEffect(()=>{if(camp&&tab==='Overview'&&experience.home!=='Overview')navigate(experience.home);},[camp?.user.role,camp?.user.owner,tab]);
+  useEffect(()=>{if(camp&&(location.pathname==='/login'||(tab==='Overview'&&experience.home!=='Overview')))navigate(experience.home);},[camp?.user.role,camp?.user.owner,tab]);
   function viewWarrior(warrior: Warrior) { navigate('Warrior',{warrior:warrior.id,group:warrior.group_name}); }
   function open(type: string, warrior?: Warrior, slot?: string) {
     if(type==='register'){location.assign('/check-in?walkin=1');return;}
@@ -292,7 +292,7 @@ export default function Pilot() {
         if(modal==='account'){payload.groups=new FormData(event.currentTarget).getAll('groups').map(String);if(payload.password!==payload.confirmPassword)throw Error('The initial passwords do not match.');}
         const response=await fetch(modal==='account'?'/api/staff/accounts':'/api/auth/password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const result=await response.json() as {error?:string;sessionsClosed?:boolean};if(!response.ok)throw Error(result.error||'The request could not be completed.');
         submittedForm.reset();setFormDirty(false);dirtyRef.current=false;setModal(null);
-        if(modal==='password'){location.assign('/?password=changed'+(result.sessionsClosed===false?'&sessions=check':''));return;}
+        if(modal==='password'){location.assign('/login?password=changed'+(result.sessionsClosed===false?'&sessions=check':''));return;}
         await store.refresh();setNotice(`Account created for ${payload.email}. They can sign in with the initial password.`);return;
       }
       if (modal === 'members') {payload.revision=editingMember?.revision;payload.groups=new FormData(event.currentTarget).getAll('groups').map(String);payload.active=editingMember?.active!==false;if(!['medical_lead','coordinator','analyst','administrator','checkin'].includes(String(payload.role))&&!payload.groups.length)throw Error('Assign at least one group for this role.');}

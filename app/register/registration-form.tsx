@@ -312,11 +312,12 @@ export default function RegistrationForm({
             care.
           </p>
         </div>
-        <a className="reg-staff-link" href="/">
+        <a className="reg-staff-link" href="/login">
           Staff sign in <ArrowRight size={15} />
         </a>
       </aside>
       <section className="reg-main">
+        {!walkin&&<a className="reg-home-link" href="/"><ArrowLeft size={15}/>Camp Victory home</a>}
         <div className="reg-mobile-brand">
           <img
             src="/dyc-logo-light.png"

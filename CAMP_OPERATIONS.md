@@ -1,5 +1,11 @@
 # Camp Victory registration and arrivals
 
+Start here: https://dyc-snowy.vercel.app/
+
+Choose **Register for camp** for participants or **Staff sign in** for the staff workspace. Staff are directed to their role’s dashboard after sign-in. Check-in, rooms, teams and care tools are available through the workspace navigation.
+
+Staff sign-in: https://dyc-snowy.vercel.app/login
+
 Public registration: https://dyc-snowy.vercel.app/register
 Staff workspace: https://dyc-snowy.vercel.app/check-in
 Rooms and activity teams: https://dyc-snowy.vercel.app/rooms-teams
