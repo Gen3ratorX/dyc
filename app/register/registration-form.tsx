@@ -16,6 +16,7 @@ import {
   Phone,
   Printer,
   ShieldCheck,
+  UserRoundPlus,
 } from "lucide-react";
 import {
   CAMP,
@@ -83,15 +84,7 @@ export default function RegistrationForm({
           ["name", "guardian", "emergencyName"].includes(key) ? 150 : 2000
         }
         required={required}
-        autoComplete={
-          key === "name"
-            ? "name"
-            : key === "phone"
-              ? "tel"
-              : key === "dob"
-                ? "bday"
-                : "off"
-        }
+        autoComplete="off"
         onChange={(e) => update(key, e.target.value)}
       />
       {hint && <small>{hint}</small>}
@@ -223,23 +216,24 @@ export default function RegistrationForm({
           confirmed by staff. If anything changes, contact the camp team on{" "}
           <a href={"tel:" + CAMP.contact}>+233 50 397 9411</a>.
         </p>
-        <button className="primary reg-no-print" onClick={() => window.print()}>
-          <Printer size={18} />
-          Print confirmation{minor ? " & guardian form" : ""}
-        </button>
-        {walkin && (
-          <button
-            className="reg-no-print"
-            onClick={() => {
-              setReceipt("");
-              setData({ ...blankRegistration });
-              setStep(0);
-              id.current = crypto.randomUUID();
-            }}
-          >
-            Register another participant
+        <div className="reg-receipt-actions reg-no-print">
+          <button className="primary" onClick={() => {
+            setData({ ...blankRegistration });
+            setStep(0);
+            setError("");
+            setBusy(false);
+            submitting.current = false;
+            id.current = crypto.randomUUID();
+            setReceipt("");
+          }}>
+            <UserRoundPlus size={18} />Register another camper
           </button>
-        )}
+          <button onClick={() => window.print()}>
+            <Printer size={18} />Print confirmation{minor ? " & guardian form" : ""}
+          </button>
+        </div>
+        <p className="reg-receipt-next reg-no-print">Save or print this camper’s reference before starting the next form. Each new registration starts with blank answers and permissions.</p>
+        {!walkin && <a className="reg-receipt-home reg-no-print" href="/">Camp Victory home</a>}
         {minor && (
           <div className="reg-guardian-print">
             <h2>Parent or guardian permission</h2>
