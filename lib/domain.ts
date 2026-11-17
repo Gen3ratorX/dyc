@@ -1,5 +1,5 @@
 export const slots = ['Waking','Before lunch','Before dinner','Bedtime','3 a.m.'] as const;
-export const roles = ['medical_lead','doctor','nurse','mentor','coordinator','analyst','administrator'] as const;
+export const roles = ['medical_lead','doctor','nurse','mentor','coordinator','analyst','administrator','checkin'] as const;
 export type Role = typeof roles[number];
 export type Warrior = {id:string;name:string;age:number;group_name:string;room:string;guardian?:string;contact?:string;allergies?:string;version:number};
 export type Entry = {id:string;warrior_id:string;kind:string;care_day:string;measured_at:string;payload:Record<string,any>;author:string;received_at:string};
@@ -20,9 +20,10 @@ function bounded(value:unknown,label:string,max:number,required=false){if(value=
 function version(value:unknown,label='Version'){if(!Number.isSafeInteger(value)||Number(value)<0)invalid(label+' is invalid. Refresh and try again.');}
 export function validate(type:string,p:Record<string,any>){
  if(!p||typeof p!=='object'||Array.isArray(p))invalid('Entry details must be an object.');
- if(!['reading','note','exception','administration','review','transition','regimen','register','assignment','members','seed','capacity'].includes(type))invalid('Unknown action.');
+ if(!['reading','note','exception','administration','review','transition','regimen','register','assignment','members','seed','capacity','arrival'].includes(type))invalid('Unknown action.');
  rejectCredentials(p);
  bounded(p.note,'Note',4000);bounded(p.overrideReason,'Care-day explanation',1000);
+ if(type==='arrival'){version(p.version);if(typeof p.at!=='string'||!Number.isFinite(Date.parse(p.at)))invalid('A valid arrival time is required.');}
  if(type==='capacity'){if(!Number.isInteger(p.capacity)||p.capacity<1||p.capacity>10000||!Number.isInteger(p.baseCapacity)||p.baseCapacity<1)invalid('Enter a participant limit between 1 and 10,000.');}
  if(type==='reading'){
   if(!slots.includes(p.slot)&&p.slot!=='Unscheduled')invalid('Choose a valid check.');

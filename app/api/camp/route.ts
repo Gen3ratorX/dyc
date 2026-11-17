@@ -9,7 +9,7 @@ export async function GET(){try{
  const all=['medical_lead','coordinator','analyst'].includes(role);const isClinical=['medical_lead','doctor','nurse','mentor'].includes(role);
  let warriors=(await db.prepare('SELECT * FROM warriors ORDER BY group_name,name').all()).results as any[];
  const participantCount=warriors.length;
- if(!all)warriors=warriors.filter(w=>groups.includes(w.group_name));if(role==='administrator')warriors=[];
+ if(!all)warriors=warriors.filter(w=>groups.includes(w.group_name));if(['administrator','checkin'].includes(role))warriors=[];
  const campOwner=owner||role==='administrator'?await db.prepare("SELECT value FROM settings WHERE key='owner'").first<{value:string}>():null;
  const ids=new Set(warriors.map(w=>w.id));
  const entries=isClinical||role==='analyst'?(await db.prepare('SELECT * FROM entries ORDER BY measured_at DESC').all()).results.filter((e:any)=>ids.has(e.warrior_id)).map((e:any)=>({...e,payload:JSON.parse(e.payload)})):[];

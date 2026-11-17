@@ -1,4 +1,4 @@
-export const staffRoles=['medical_lead','doctor','nurse','mentor','coordinator','analyst','administrator'] as const;
+export const staffRoles=['medical_lead','doctor','nurse','mentor','coordinator','analyst','administrator','checkin'] as const;
 export class StaffInputError extends Error {}
 const invalid=(message:string):never=>{throw new StaffInputError(message);};
 export function validatePassword(value:unknown){
@@ -18,6 +18,6 @@ export function accountInput(value:unknown){
  const groups=[...new Set(input.groups as string[])];
  if(['doctor','nurse','mentor'].includes(String(input.role))&&!groups.length)invalid('Assign at least one group for this role.');
  const password=validatePassword(input.password);
- return {email,fullName,role:input.role as typeof staffRoles[number],groups:['medical_lead','coordinator','analyst','administrator'].includes(String(input.role))?[]:groups,password};
+ return {email,fullName,role:input.role as typeof staffRoles[number],groups:['medical_lead','coordinator','analyst','administrator','checkin'].includes(String(input.role))?[]:groups,password};
 }
 export function canManageStaff(actor:{owner?:boolean;role:string}){return actor.owner===true||actor.role==='administrator';}

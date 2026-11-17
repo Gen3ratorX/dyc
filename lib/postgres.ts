@@ -7,7 +7,8 @@ type Row=Record<string,unknown>;
 type QueryResult=Row[]&{count:number};
 type Executor={unsafe:(sql:string,values?:any[])=>PromiseLike<QueryResult>};
 export type Statement={sql:string;values:any[];bind:(...values:any[])=>Statement;first:<T=Row>()=>Promise<T|null>;all:<T=Row>()=>Promise<{results:T[]}>;run:()=>Promise<{success:boolean;meta:{changes:number}}>};
-export type ServerDatabase={prepare:(sql:string)=>Statement;batch:(queries:Statement[])=>Promise<unknown[]>};
+export type WriteTransaction={query:<T=Record<string,any>>(sql:string,values?:any[])=>Promise<T[]>};
+export type ServerDatabase={write:<T>(run:(tx:WriteTransaction)=>Promise<T>)=>Promise<T>;prepare:(sql:string)=>Statement;batch:(queries:Statement[])=>Promise<unknown[]>};
 let connection:ReturnType<typeof postgres>|undefined;
 let instance:ServerDatabase|undefined;
 
@@ -34,6 +35,6 @@ export function database():ServerDatabase|undefined{
    async run(){const rows=await transaction(tx=>execute(tx,this));return {success:true,meta:{changes:rows.count}};},
   };return statement;
  };
- instance={prepare,async batch(queries){return transaction(async tx=>{let changes=0;const results=[];for(const query of queries){const rows=await execute(tx,query,changes);changes=rows.count;results.push({results:Array.from(rows),success:true,meta:{changes}});}return results;},true);}};
+ instance={prepare,async write(run){return transaction(tx=>run({query:async(sql,values=[])=>Array.from(await tx.unsafe(postgresQuery(sql),values)) as any}),true);},async batch(queries){return transaction(async tx=>{let changes=0;const results=[];for(const query of queries){const rows=await execute(tx,query,changes);changes=rows.count;results.push({results:Array.from(rows),success:true,meta:{changes}});}return results;},true);}};
  return instance;
 }

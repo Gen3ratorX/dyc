@@ -12,6 +12,8 @@ const {memberRevision}=await import(domainURL);
 const sqlite=new DatabaseSync(':memory:');sqlite.exec('PRAGMA foreign_keys=ON;');
 const migration=readFileSync('supabase/migrations/20261022075106_dyc_camp_schema.sql','utf8');
 sqlite.exec(migration.slice(migration.indexOf('CREATE TABLE "warriors"'),migration.indexOf('REVOKE ALL ON ALL TABLES')));
+const registrationMigration=readFileSync('supabase/migrations/20261117131801_camp_registration_checkin.sql','utf8');
+sqlite.exec(registrationMigration.slice(0,registrationMigration.indexOf('-- Existing')).replaceAll('dyc.',''));
 let beforeBatch;
 const statements=[];
 function prepare(sql){const q={sql,values:[],bind(...values){return {...q,values};},async first(){return sqlite.prepare(sql).get(...this.values)||null;},async all(){return {results:sqlite.prepare(sql).all(...this.values)};},async run(){const r=sqlite.prepare(sql).run(...this.values);return {meta:{changes:Number(r.changes)}};}};return q;}
@@ -29,7 +31,8 @@ export function requireSameOrigin(r){if(r.headers.get('origin')!=='https://camp.
 export const failure=e=>Response.json({error:e.message},{status:e.status||(e instanceof ValidationError?400:503)});`);
 const contextURL=encode(`export const context=()=>globalThis.__dycTestContext();`);
 globalThis.__dycTestContext=async()=>{const m=sqlite.prepare('SELECT * FROM members WHERE email=?').get(actor.email);if(!m||!m.active)throw new (await import(securityURL)).RequestError('403:Inactive');return {db,...actor,role:m.role,groups:JSON.parse(m.groups_json)};};
-async function route(path){return import(encode(compile(path).replaceAll('../../../lib/camp-context',contextURL).replaceAll('../../../lib/server-security',securityURL).replaceAll('../../../lib/domain',domainURL)));}
+const operationsURL=encode(`export async function operationWrite(){throw Error('Use the operations integration tests for arrival commands.');}`);
+async function route(path){return import(encode(compile(path).replaceAll('../../../lib/camp-context',contextURL).replaceAll('../../../lib/server-security',securityURL).replaceAll('../../../lib/domain',domainURL).replaceAll('../../../lib/operations-service',operationsURL)));}
 const command=await route('app/api/command/route.ts'),camp=await route('app/api/camp/route.ts'),exportsRoute=await route('app/api/exports/route.ts');
 function as(id){const m=initialActors.find(m=>m[3]===id);actor={email:m[0],role:m[1],groups:JSON.parse(m[2]),owner:id==='owner',user:{userId:id,email:m[0],displayName:'Synthetic '+id}};}
 async function send(type,payload,warrior,extra={}){const body={id:crypto.randomUUID(),actor:actor.user.userId,type,payload,warrior,createdAt:new Date().toISOString(),...extra};const r=await command.POST(new Request('https://camp.test/api/command',{method:'POST',headers:{Origin:'https://camp.test','Content-Type':'application/json'},body:JSON.stringify(body)}));return {status:r.status,data:await r.json(),body};}
@@ -129,7 +132,7 @@ assert.ok(ui.includes('payload.baseCapacity=formVersions.current.capacity'));
 assert.ok(ui.includes('const regimen = formRegimen;'));
 const {workspaceExperience}=await import(encode(compile('lib/workspace-experience.ts')));
 for(const role of ['doctor','nurse','mentor']){const x=workspaceExperience(role);assert.equal(x.home,'Overview');assert.equal(x.navigation.includes('Sync centre'),false);assert.equal(x.titles.Settings,'My account');}
-assert.equal(workspaceExperience('coordinator').home,'Warriors');assert.equal(workspaceExperience('analyst').home,'Reports');assert.equal(workspaceExperience('administrator').home,'Settings');assert.equal(workspaceExperience('medical_lead',true).admin,true);assert.equal(workspaceExperience('mentor').navigation.includes('Reports'),false);
+assert.equal(workspaceExperience('coordinator').home,'Check-in');assert.equal(workspaceExperience('analyst').home,'Reports');assert.equal(workspaceExperience('administrator').home,'Settings');assert.equal(workspaceExperience('medical_lead',true).admin,true);assert.equal(workspaceExperience('mentor').navigation.includes('Reports'),false);
 console.log('Capacity checks passed: admin/owner only, numeric limits, stale settings, minimum registered count, full-camp refusal and concurrent registration guard. Role-specific navigation and home screens passed.');
 console.log('CRUD route checks passed: persisted creates/reads, idempotent retries, stale writes, prescription history, administrations, review lifecycle, scoped writes during reassignment, handover suspension race, staff permission CAS, session suspension, field filtering and audited exports.');
 delete globalThis.__dycTestContext;sqlite.close();
