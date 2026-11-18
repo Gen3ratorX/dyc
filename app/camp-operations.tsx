@@ -1,6 +1,7 @@
 "use client";
 import {
   useEffect,
+  useId,
   useRef,
   useState,
   type FormEvent,
@@ -36,12 +37,15 @@ function Dialog({
   onClose,
   children,
   wide = false,
+  navigation,
 }: {
   title: string;
   onClose: () => void;
   children: ReactNode;
   wide?: boolean;
+  navigation?: ReactNode;
 }) {
+  const titleId = useId();
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const el = ref.current;
@@ -51,6 +55,7 @@ function Dialog({
   return (
     <dialog
       ref={ref}
+      aria-labelledby={titleId}
       className={"ops-dialog" + (wide ? " ops-dialog-wide" : "")}
       onCancel={(e) => {
         e.preventDefault();
@@ -58,7 +63,7 @@ function Dialog({
       }}
     >
       <header>
-        <h2>{title}</h2>
+        <h2 id={titleId}>{title}</h2>
         <button
           className="icon-button"
           onClick={onClose}
@@ -67,6 +72,7 @@ function Dialog({
           <X size={20} />
         </button>
       </header>
+      {navigation && <nav className="ops-dialog-nav" aria-label="Camper record sections">{navigation}</nav>}
       <div className="ops-dialog-body">{children}</div>
     </dialog>
   );
@@ -794,12 +800,18 @@ export default function CampOperations({
       {person && (
         <Dialog
           title={person.name}
+          navigation={<>
+            <a href="#ops-person-details">Details</a>
+            <a href="#ops-person-documents">Documents</a>
+            {data.canAssign && <a href="#ops-person-assignments">Assignments</a>}
+            <a href="#ops-person-medical">Medical review</a>
+          </>}
           onClose={() => {
             setSelected(null);
             setError("");
           }}
         >
-          <div className="ops-person-header">
+          <div className="ops-person-header" id="ops-person-details">
             <span className="ops-person-monogram">
               {person.name
                 .split(" ")
@@ -998,7 +1010,7 @@ export default function CampOperations({
               </details>
             </form>
           )}
-          <section className="ops-action-section">
+          <section className="ops-action-section" id="ops-person-documents">
             <h3>Documents</h3>
             <p>
               {person.documents
@@ -1023,6 +1035,7 @@ export default function CampOperations({
           {data.canAssign && (
             <form
               className="ops-action-section"
+              id="ops-person-assignments"
               key={person.id + ":" + person.version}
               onSubmit={(e) => {
                 e.preventDefault();
@@ -1086,6 +1099,7 @@ export default function CampOperations({
                   </small>
                 </label>
               </div>
+              <div className="reg-two">
               <label className="reg-field">
                 <span>Activity team</span>
                 <select name="teamId" defaultValue={person.team_id || ""}>
@@ -1116,6 +1130,7 @@ export default function CampOperations({
                   </small>
                 </label>
               )}
+              </div>
               <button
                 disabled={
                   busy ||
@@ -1123,6 +1138,7 @@ export default function CampOperations({
                   queued(person) ||
                   (!!roomChoice && !bedChoice)
                 }
+                className="primary"
               >
                 Save assignments
                 <ArrowRight size={16} />
@@ -1160,7 +1176,7 @@ export default function CampOperations({
               </dl>
             </section>
           )}
-          <section className="ops-action-section">
+          <section className="ops-action-section" id="ops-person-medical">
             <h3>Arrival medical review</h3>
             <span
               className={
