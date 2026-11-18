@@ -175,16 +175,18 @@ export default function CampOperations({
   }, [pending.length, section]);
   useEffect(() => {
     if (!online) return;
-    const timer = setInterval(() => {
-      if (
-        document.visibilityState === "visible" &&
-        !busy &&
-        !modal &&
-        !selected
-      )
+    const refreshVisible = () => {
+      if (document.visibilityState === "visible" && !busy && !modal && !selected)
         void load();
-    }, 20000);
-    return () => clearInterval(timer);
+    };
+    const timer = setInterval(refreshVisible, 20000);
+    window.addEventListener("focus", refreshVisible);
+    document.addEventListener("visibilitychange", refreshVisible);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener("focus", refreshVisible);
+      document.removeEventListener("visibilitychange", refreshVisible);
+    };
   }, [online, busy, modal, selected, scope]);
   const person = data?.people.find((p) => p.id === selected);
   const [roomChoice, setRoomChoice] = useState(""),
@@ -470,9 +472,13 @@ export default function CampOperations({
       )}
       {!configuration ? (
         <>
-          <div className="ops-metrics">
+          {!data.canDesk && <aside className="ops-scope-note">
+        <ClipboardCheck size={20} aria-hidden="true" />
+        <div><strong>Your assigned participants</strong><p>This list includes your care groups{camp.user.groups.length ? ` (${camp.user.groups.join(", ")})` : ""}{role === "mentor" ? " and activity teams you lead" : ""}. New registrations appear at the arrival desk first. An administrator or arrival-desk staff member must assign a clinical care group before a camper appears for that care team.</p></div>
+      </aside>}
+      <div className="ops-metrics">
             {[
-              ["Registered", data.people.length, "All participants"],
+              [data.canDesk ? "Registered" : "In your groups", data.people.length, "All participants"],
               [
                 "Arrived",
                 data.people.filter((p) => p.arrival === "Arrived").length,
@@ -540,7 +546,7 @@ export default function CampOperations({
                   "Documents outstanding",
                   "Medical review pending",
                 ].map((s) => (
-                  <option key={s}>{s}</option>
+                  <option key={s} value={s}>{s === "All participants" && !data.canDesk ? "All assigned participants" : s}</option>
                 ))}
               </select>
             </div>
@@ -548,6 +554,7 @@ export default function CampOperations({
               <span>
                 {filtered.length}{" "}
                 {filtered.length === 1 ? "participant" : "participants"}
+                {!data.canDesk ? " · assigned to your groups" : ""}
                 {filter !== "All participants" ? " · " + filter : ""}
               </span>
               <div>
@@ -636,12 +643,12 @@ export default function CampOperations({
                 <h2>
                   {data.people.length
                     ? "No matching participants"
-                    : "Ready for your first registration"}
+                    : data.canDesk ? "Ready for your first registration" : "No participants assigned yet"}
                 </h2>
                 <p>
                   {data.people.length
-                    ? "Try another name or clear the filter."
-                    : "Share the camp registration link or register a walk-in at this desk."}
+                    ? (data.canDesk ? "Try another name or clear the filter." : "Try another name or clear the filter. If a camper has just registered, ask the arrival desk to check their clinical care group assignment.")
+                    : data.canDesk ? "Share the camp registration link or register a walk-in at this desk." : "Registration is handled by the arrival desk. Campers appear here once they are assigned to your clinical care group."}
                 </p>
                 {data.canDesk && (
                   <a href="/register" target="_blank" rel="noreferrer">
