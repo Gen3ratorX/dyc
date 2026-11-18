@@ -219,6 +219,9 @@ export type OpsPerson = {
   details: Partial<RegistrationInput>;
   care?: Record<string, string>;
   canAssess?: boolean;
+  reviewRequired?: boolean;
+  reviewReasons?: string[];
+  ageNeedsReview?: boolean;
   arrival: string;
   arrived_at: string;
   documents: number;

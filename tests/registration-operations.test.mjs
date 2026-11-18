@@ -54,6 +54,14 @@ assert.equal(sqlite.prepare('SELECT arrival FROM registrations WHERE warrior_id=
 for(const a of [doctor,mentor,analyst]){await assert.rejects(()=>operationWrite(db,a,{action:'assignment',warrior:id,version:2,roomId:null,bed:null,teamId:null,group:'Group A'}),e=>[403,404,409].includes(e.status));}
 
 
+// Review status is visible for check-in, but detailed reasons stay in permitted records.
+const importedDetails=JSON.parse(sqlite.prepare('SELECT details FROM registrations WHERE warrior_id=?').get(id).details);
+importedDetails.importReview={pending:true,ageNeedsReview:true,reasons:['Synthetic private review reason'],sourceRows:[2]};
+sqlite.prepare('UPDATE registrations SET details=? WHERE warrior_id=?').run(JSON.stringify(importedDetails),id);
+const analystReview=(await operationSnapshot(db,analyst)).people.find(p=>p.id===id);
+assert.equal(analystReview.reviewRequired,true);assert.equal(analystReview.ageNeedsReview,true);assert.equal(analystReview.reviewReasons,undefined);assert.ok(!JSON.stringify(analystReview).includes('Synthetic private review reason'));
+assert.deepEqual((await operationSnapshot(db,doctor)).people.find(p=>p.id===id).reviewReasons,['Synthetic private review reason']);
+
 // A last-bed race: both requests target a new free room under the same lock.
 await operationWrite(db,admin,{action:'room',name:'102',building:'Test Block',capacity:1});const room2=sqlite.prepare("SELECT id FROM camp_rooms WHERE name='102'").get();
 const race=await Promise.allSettled([operationWrite(db,coordinator,{...assignment,version:2,roomId:room2.id}),operationWrite(db,coordinator,{...assignment,warrior:id2,version:2,roomId:room2.id})]);

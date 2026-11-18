@@ -593,7 +593,7 @@ export default function CampOperations({
                         >
                           <strong>{p.name}</strong>
                           <small>
-                            {p.age} years · {p.group_name}
+                            {p.ageNeedsReview || !p.age ? 'Age needs review' : `${p.age} years`} · {p.group_name}
                           </small>
                         </button>
                       </td>
@@ -617,11 +617,12 @@ export default function CampOperations({
                       </td>
                       <td>
                         <div className="ops-tasks">
+                          {p.reviewRequired && <span>Registration review</span>}
                           {!p.documents && <span>Documents</span>}
                           {p.medical === "Pending" && (
                             <span>Medical review</span>
                           )}
-                          {!!p.documents && p.medical === "Reviewed" && (
+                          {!!p.documents && !p.reviewRequired && p.medical === "Reviewed" && (
                             <span className="complete">Checks complete</span>
                           )}
                         </div>
@@ -825,7 +826,7 @@ export default function CampOperations({
             </span>
             <div>
               <p>
-                {person.age} years · {person.group_name}
+                {person.ageNeedsReview || !person.age ? 'Age needs review' : `${person.age} years`} · {person.group_name}
               </p>
               <small>{person.reference}</small>
             </div>
@@ -852,6 +853,7 @@ export default function CampOperations({
               </small>
             )}
           </div>
+          {person.reviewRequired && <aside className="ops-import-review" role="note"><strong>Registration details need review</strong><p>This camper was imported from the registration sheet. Confirm any unclear answers before using them for care or camp planning. Arrival can still be recorded.</p>{person.reviewReasons?.length ? <ul>{person.reviewReasons.map((reason,i)=><li key={i}>{reason}</li>)}</ul> : <p>Ask the camp administrator to review the source entry.</p>}</aside>}
           {error && (
             <div role="alert" className="reg-error">
               {error}

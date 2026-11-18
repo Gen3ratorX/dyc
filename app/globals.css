@@ -296,3 +296,5 @@ select:not([multiple]):not([size]):disabled{cursor:not-allowed}.reg-birthday sel
 @media(forced-colors:active){select:not([multiple]):not([size]){appearance:auto;background-image:none!important;padding-right:12px!important}}
 
 .ops-scope-note{display:flex;gap:12px;align-items:flex-start;padding:16px 18px;border:1px solid #d2e6f2;border-radius:12px;background:#edf7fc;margin:20px 0;color:#335e7c}.ops-scope-note>svg{flex-shrink:0;margin-top:2px;color:#007bc4}.ops-scope-note strong{font-size:13px}.ops-scope-note p{font-size:12px;line-height:1.7;margin:5px 0 0;max-width:900px}
+
+.ops-import-review{padding:16px 18px;border:1px solid #e9d4a9;border-radius:12px;background:#fff8e9;color:#775a25;margin:16px 0;font-size:13px;line-height:1.7}.ops-import-review p{margin:6px 0}.ops-import-review ul{margin:10px 0 0;padding-left:19px}.ops-import-review strong{color:#6c4c1a}

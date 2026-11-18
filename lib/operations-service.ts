@@ -44,12 +44,17 @@ export async function operationSnapshot(db: ServerDatabase, a: DeskActor) {
       const { reported_care, details, guardian, contact, ...rest } = w;
       const clinicalAccess = permissions.canMedical && opsVisible(a, w as any);
       const fullDetails = permissions.canDesk || clinicalAccess;
+      const parsedDetails = JSON.parse(details);
+      const review = parsedDetails.importReview;
       return {
         ...rest,
         details: fullDetails
-          ? { phone: contact, guardian, ...JSON.parse(details) }
+          ? { phone: contact, guardian, ...parsedDetails }
           : { phone: contact, guardian },
         canAssess: clinicalAccess,
+        reviewRequired: review?.pending === true,
+        ageNeedsReview: review?.pending === true && review?.ageNeedsReview === true,
+        ...(fullDetails && review?.pending === true ? {reviewReasons: review.reasons} : {}),
         ...(clinicalAccess ? { care: JSON.parse(reported_care) } : {}),
       };
     });
