@@ -17,8 +17,8 @@ let migration=readFileSync('supabase/migrations/20261022075106_dyc_camp_schema.s
 migration=readFileSync('supabase/migrations/20261117131801_camp_registration_checkin.sql','utf8');sqlite.exec(migration.slice(0,migration.indexOf('-- Existing')).replaceAll('dyc.',''));
 let chain=Promise.resolve();const db={write(run){const result=chain.then(async()=>{sqlite.exec('BEGIN');try{const r=await run({query:async(sql,values=[])=>sqlite.prepare(sql).all(...values)});sqlite.exec('COMMIT');return r;}catch(e){sqlite.exec('ROLLBACK');throw e;}});chain=result.catch(()=>{});return result;}};
 const actor=(role,groups=[],owner=false)=>({email:role+'@example.invalid',role,groups,owner,user:{userId:role}});
-const admin=actor('administrator'),desk=actor('checkin'),coordinator=actor('coordinator'),doctor=actor('doctor',['Group A']),mentor=actor('mentor',['Group A']),analyst=actor('analyst');
-for(const a of [admin,desk,coordinator,doctor,mentor,analyst])sqlite.prepare('INSERT INTO members(email,role,groups_json,active,user_id) VALUES(?,?,?,1,?)').run(a.email,a.role,JSON.stringify(a.groups),a.user.userId);
+const admin=actor('administrator'),desk=actor('checkin'),coordinator=actor('coordinator'),doctor=actor('doctor',['Group A']),mentor=actor('mentor',['Group A']),analyst=actor('analyst'),nurse=actor('nurse',['Group A']),lead=actor('medical_lead');
+for(const a of [admin,desk,coordinator,doctor,mentor,analyst,nurse,lead])sqlite.prepare('INSERT INTO members(email,role,groups_json,active,user_id) VALUES(?,?,?,1,?)').run(a.email,a.role,JSON.stringify(a.groups),a.user.userId);
 const sample={...blankRegistration,name:'Fictional Ama Example',dob:'2012-04-03',gender:'Female',type1:true,region:'Greater Accra',town:'Test town',phone:'0200000000',guardian:'Fictional Guardian',emergencyName:'Fictional Contact',emergencyPhone:'0200000001',emergencyPhone2:'0200000002',availability:'Yes',diagnosisYear:'2018',clinic:'Fictional Clinic',insulin:'Reported test insulin',insulinDoses:'TEST ONLY',otherMedicines:'None',support:'Synthetic support note',diet:'None',shirt:'M',guardianPermission:true,dataConsent:true,activitiesConsent:true,emergencyConsent:true,photoConsent:false,rulesConsent:true,truthConsent:true};
 assert.equal(campAge('2001-11-19'),25);assert.equal(campAge('2001-11-20'),24);assert.equal(campAge('2008-11-19'),18);assert.equal(campAge('2008-11-20'),17);assert.equal(campAge('2012-02-30'),-1);
 assert.equal(registrationInput(sample).photoConsent,false);
@@ -30,7 +30,7 @@ await assert.rejects(()=>registerParticipant(db,sample,crypto.randomUUID()),e=>e
 const id=sqlite.prepare('SELECT warrior_id FROM registrations WHERE reference=?').get(receipt.reference).warrior_id;
 assert.equal(sqlite.prepare('SELECT count(*) AS n FROM regimens').get().n,0);assert.equal(sqlite.prepare('SELECT group_name FROM warriors WHERE id=?').get(id).group_name,'Unassigned');
 for(const a of [desk,admin,coordinator]){const snapshot=await operationSnapshot(db,a);assert.equal(snapshot.people.length,1);assert.equal(snapshot.people[0].care,undefined);assert.equal(snapshot.people[0].details.phone,sample.phone);assert.ok(!JSON.stringify(snapshot).includes('Reported test insulin'));assert.ok(!JSON.stringify(snapshot).includes('Synthetic support note'));}
-assert.equal((await operationSnapshot(db,doctor)).people.length,0);await assert.rejects(()=>operationSnapshot(db,analyst),e=>e.status===403);
+for(const a of [doctor,mentor,analyst]){const snapshot=await operationSnapshot(db,a);assert.equal(snapshot.people.length,1);assert.equal(snapshot.canCheckIn,true);assert.equal(snapshot.canDesk,false);assert.equal(snapshot.people[0].canAssess,false);assert.equal(snapshot.people[0].care,undefined);assert.deepEqual(Object.keys(snapshot.people[0].details).sort(),['guardian','phone']);assert.ok(!JSON.stringify(snapshot).includes('Synthetic support note'));}
 await assert.rejects(()=>operationWrite(db,desk,{action:'room',building:'Test Block',name:'101',capacity:1}),e=>e.status===403);
 await operationWrite(db,admin,{action:'room',building:'Test Block',name:'101',capacity:1});await operationWrite(db,admin,{action:'team',name:'Test Team',leader:mentor.email});
 const room=sqlite.prepare('SELECT * FROM camp_rooms').get(),team=sqlite.prepare('SELECT * FROM camp_teams').get();
@@ -38,15 +38,21 @@ const assignment={action:'assignment',warrior:id,version:1,roomId:room.id,bed:1,
 await assert.rejects(()=>operationWrite(db,desk,assignment),e=>e.status===403);
 await operationWrite(db,coordinator,assignment);
 let snapshot=await operationSnapshot(db,doctor);assert.equal(snapshot.people[0].care.insulin,sample.insulin);assert.equal(snapshot.people[0].group_name,'Group A');
-snapshot=await operationSnapshot(db,mentor);assert.equal(snapshot.people[0].care,undefined);assert.deepEqual(snapshot.people[0].details,{});
+snapshot=await operationSnapshot(db,mentor);assert.equal(snapshot.people[0].care,undefined);assert.deepEqual(Object.keys(snapshot.people[0].details).sort(),['guardian','phone']);
 await assert.rejects(()=>operationWrite(db,desk,{...assignment,version:1}),e=>e.status===409);
 await assert.rejects(()=>operationWrite(db,admin,{action:'room',id:room.id,version:1,name:'101',building:'Test Block',capacity:1,active:false}),e=>e.status===409);
 const second=await registerParticipant(db,{...sample,name:'Fictional Kofi Example'},crypto.randomUUID());const id2=sqlite.prepare('SELECT warrior_id FROM registrations WHERE reference=?').get(second.reference).warrior_id;
 await assert.rejects(()=>operationWrite(db,coordinator,{...assignment,warrior:id2}),e=>e.status===409);
 assert.equal(sqlite.prepare('SELECT room_id FROM registrations WHERE warrior_id=?').get(id2).room_id,null);
 await operationWrite(db,coordinator,{action:'assignment',warrior:id2,version:1,roomId:null,bed:null,teamId:team.id,group:'Group B'});
-const mentorTeam=await operationSnapshot(db,mentor);assert.ok(mentorTeam.people.some(p=>p.id===id2));assert.deepEqual(mentorTeam.people.find(p=>p.id===id2).details,{});assert.equal(mentorTeam.people.find(p=>p.id===id2).care,undefined);
-assert.ok(!(await operationSnapshot(db,doctor)).people.some(p=>p.id===id2));
+const mentorTeam=await operationSnapshot(db,mentor);assert.ok(mentorTeam.people.some(p=>p.id===id2));assert.deepEqual(Object.keys(mentorTeam.people.find(p=>p.id===id2).details).sort(),['guardian','phone']);assert.equal(mentorTeam.people.find(p=>p.id===id2).care,undefined);
+const otherGroup=(await operationSnapshot(db,doctor)).people.find(p=>p.id===id2);assert.ok(otherGroup);assert.equal(otherGroup.care,undefined);assert.equal(otherGroup.canAssess,false);
+await assert.rejects(()=>operationWrite(db,doctor,{action:'medical',warrior:id2,version:2,status:'Reviewed'}),e=>e.status===404);
+// All staff may record arrival outside their clinical groups, including unassigned campers.
+for(const a of [doctor,mentor,analyst,nurse,lead,coordinator,admin,desk]){assert.equal((await operationSnapshot(db,a)).canCheckIn,true);await operationWrite(db,a,{action:'arrival',warrior:id2,version:2,at:new Date().toISOString(),commandId:crypto.randomUUID()});}
+assert.equal(sqlite.prepare('SELECT arrival FROM registrations WHERE warrior_id=?').get(id2).arrival,'Arrived');
+for(const a of [doctor,mentor,analyst]){await assert.rejects(()=>operationWrite(db,a,{action:'assignment',warrior:id,version:2,roomId:null,bed:null,teamId:null,group:'Group A'}),e=>[403,404,409].includes(e.status));}
+
 
 // A last-bed race: both requests target a new free room under the same lock.
 await operationWrite(db,admin,{action:'room',name:'102',building:'Test Block',capacity:1});const room2=sqlite.prepare("SELECT id FROM camp_rooms WHERE name='102'").get();
@@ -54,7 +60,7 @@ const race=await Promise.allSettled([operationWrite(db,coordinator,{...assignmen
 assert.equal(race.filter(r=>r.status==='fulfilled').length,1);assert.equal(sqlite.prepare('SELECT count(*) AS n FROM registrations WHERE room_id=?').get(room2.id).n,1);
 const version=()=>sqlite.prepare('SELECT version FROM registrations WHERE warrior_id=?').get(id).version;
 const arrival={action:'arrival',warrior:id,commandId:crypto.randomUUID(),at:new Date().toISOString(),version:version()};
-await operationWrite(db,desk,arrival);await operationWrite(db,desk,arrival);assert.equal(sqlite.prepare("SELECT count(*) AS n FROM arrival_events WHERE action='arrival'").get().n,1);
+await operationWrite(db,desk,arrival);await operationWrite(db,desk,arrival);assert.equal(sqlite.prepare("SELECT count(*) AS n FROM arrival_events WHERE action='arrival' AND warrior_id=?").get(id).n,1);
 await operationWrite(db,desk,{...arrival,commandId:crypto.randomUUID()});assert.equal(sqlite.prepare('SELECT arrival FROM registrations WHERE warrior_id=?').get(id).arrival,'Arrived');
 await assert.rejects(()=>operationWrite(db,desk,{action:'medical',warrior:id,version:version(),status:'Reviewed'}),e=>e.status===403);
 await operationWrite(db,doctor,{action:'medical',warrior:id,version:version(),status:'Reviewed'});
@@ -68,7 +74,11 @@ await registerParticipant(db,{...sample,name:'Fictional walk-in'},crypto.randomU
 await assert.rejects(()=>registerParticipant(db,{...sample,name:'Unauthorized walk-in'},crypto.randomUUID(),mentor),e=>e.status===403);
 sqlite.prepare("UPDATE settings SET value='true' WHERE key='registration_open'").run();sqlite.prepare("INSERT INTO settings VALUES('camp_capacity','3')").run();await assert.rejects(()=>registerParticipant(db,{...sample,name:'Capacity overflow'},crypto.randomUUID()),e=>e.status===409);
 await operationWrite(db,desk,{action:'contacts',warrior:id,version:version(),name:'Corrected fictional name',phone:'0200000003',guardian:'Fictional Guardian',emergencyName:'Fictional Contact',emergencyPhone:'0200000001',emergencyPhone2:'0200000002',diet:'None',reason:'Fictional spelling correction'});assert.equal(sqlite.prepare('SELECT name FROM warriors WHERE id=?').get(id).name,'Corrected fictional name');
-sqlite.prepare("UPDATE members SET active=0 WHERE role='checkin'").run();await assert.rejects(()=>operationWrite(db,desk,{action:'documents',warrior:id,version:version(),verified:false}),e=>e.status===403);
+const unassigned=sqlite.prepare("SELECT id FROM warriors WHERE name='Fictional walk-in'").get();
+for(const a of [doctor,nurse,mentor,analyst,lead,coordinator,admin,desk])await operationWrite(db,a,{action:'arrival',warrior:unassigned.id,version:1,at:new Date().toISOString(),commandId:crypto.randomUUID()});
+assert.equal(sqlite.prepare('SELECT arrival FROM registrations WHERE warrior_id=?').get(unassigned.id).arrival,'Arrived');
+assert.equal(sqlite.prepare("SELECT count(*) AS n FROM arrival_events WHERE action='arrival' AND warrior_id=? AND details NOT LIKE '%alreadyRecorded%'").get(unassigned.id).n,1);
+sqlite.prepare("UPDATE members SET active=0 WHERE role='checkin'").run();await assert.rejects(()=>operationWrite(db,desk,{action:'arrival',warrior:id,version:version(),at:new Date().toISOString(),commandId:crypto.randomUUID()}),e=>e.status===403);await assert.rejects(()=>operationSnapshot(db,desk),e=>e.status===403);await assert.rejects(()=>operationWrite(db,desk,{action:'documents',warrior:id,version:version(),verified:false}),e=>e.status===403);
 console.log('Registration and arrivals: eligibility, optional photos, deduplication/idempotency, capacity, clinical isolation, role/scope checks, atomic bed allocation, arrival retry/reversal, assessment and document workflow, registration closure and suspended accounts passed.');
 
 for(const path of ['app/camp-operations.tsx','app/register/registration-form.tsx'])assert.ok(!/qrcode|zxing|Scan QR|QRCode/i.test(readFileSync(path,'utf8')),'No QR generation or scanning in '+path);

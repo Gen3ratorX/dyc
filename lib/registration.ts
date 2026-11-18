@@ -218,6 +218,7 @@ export type OpsPerson = {
   reference: string;
   details: Partial<RegistrationInput>;
   care?: Record<string, string>;
+  canAssess?: boolean;
   arrival: string;
   arrived_at: string;
   documents: number;
@@ -232,6 +233,7 @@ export type Operations = {
   people: OpsPerson[];
   rooms: OpsRoom[];
   teams: OpsTeam[];
+  canCheckIn: boolean;
   canDesk: boolean;
   canConfigure: boolean;
   canMedical: boolean;

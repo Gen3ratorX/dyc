@@ -402,7 +402,7 @@ export default function CampOperations({
               ? "A place to stay. A team to belong to. Clinical groups are assigned separately."
               : data.canDesk
                 ? "Find a participant, confirm their details and record their arrival."
-                : "Arrival and assessment status for participants in your care groups."}
+                : "Find any registered camper, confirm their details and record arrival."}
           </p>
         </div>
         <div className="heading-actions">
@@ -473,12 +473,12 @@ export default function CampOperations({
       {!configuration ? (
         <>
           {!data.canDesk && <aside className="ops-scope-note">
-        <ClipboardCheck size={20} aria-hidden="true" />
-        <div><strong>Your assigned participants</strong><p>This list includes your care groups{camp.user.groups.length ? ` (${camp.user.groups.join(", ")})` : ""}{role === "mentor" ? " and activity teams you lead" : ""}. New registrations appear at the arrival desk first. An administrator or arrival-desk staff member must assign a clinical care group before a camper appears for that care team.</p></div>
-      </aside>}
+            <ClipboardCheck size={20} aria-hidden="true" />
+            <div><strong>Check-in for all registered campers</strong><p>Every staff member can find a camper, confirm their identity and record arrival. Room assignments, document checks and clinical care keep their existing role permissions.</p></div>
+          </aside>}
       <div className="ops-metrics">
             {[
-              [data.canDesk ? "Registered" : "In your groups", data.people.length, "All participants"],
+              ["Registered", data.people.length, "All participants"],
               [
                 "Arrived",
                 data.people.filter((p) => p.arrival === "Arrived").length,
@@ -546,7 +546,7 @@ export default function CampOperations({
                   "Documents outstanding",
                   "Medical review pending",
                 ].map((s) => (
-                  <option key={s} value={s}>{s === "All participants" && !data.canDesk ? "All assigned participants" : s}</option>
+                  <option key={s} value={s}>{s}</option>
                 ))}
               </select>
             </div>
@@ -554,7 +554,6 @@ export default function CampOperations({
               <span>
                 {filtered.length}{" "}
                 {filtered.length === 1 ? "participant" : "participants"}
-                {!data.canDesk ? " · assigned to your groups" : ""}
                 {filter !== "All participants" ? " · " + filter : ""}
               </span>
               <div>
@@ -643,12 +642,12 @@ export default function CampOperations({
                 <h2>
                   {data.people.length
                     ? "No matching participants"
-                    : data.canDesk ? "Ready for your first registration" : "No participants assigned yet"}
+                    : "No registrations yet"}
                 </h2>
                 <p>
                   {data.people.length
-                    ? (data.canDesk ? "Try another name or clear the filter." : "Try another name or clear the filter. If a camper has just registered, ask the arrival desk to check their clinical care group assignment.")
-                    : data.canDesk ? "Share the camp registration link or register a walk-in at this desk." : "Registration is handled by the arrival desk. Campers appear here once they are assigned to your clinical care group."}
+                    ? "Try another name, registration reference or phone number, or clear the filter."
+                    : "New campers appear here after their registration is submitted. No care-group assignment is needed to check in."}
                 </p>
                 {data.canDesk && (
                   <a href="/register" target="_blank" rel="noreferrer">
@@ -925,7 +924,7 @@ export default function CampOperations({
                 <strong>{person.details.diet}</strong>
               </div>
             )}
-            <div>
+            {(data.canDesk || person.canAssess) && <div>
               <small>Photo / video permission</small>
               <strong>
                 {typeof person.details.photoConsent === "boolean"
@@ -934,9 +933,9 @@ export default function CampOperations({
                     : "No permission"
                   : "Not recorded"}
               </strong>
-            </div>
+            </div>}
           </div>
-          {data.canDesk && person.arrival === "Expected" && !queued(person) && (
+          {data.canCheckIn && person.arrival === "Expected" && !queued(person) && (
             <section className="ops-action-section">
               <h3>Record arrival</h3>
               <label className="reg-consent">
@@ -1191,7 +1190,7 @@ export default function CampOperations({
             >
               {person.medical}
             </span>
-            {data.canMedical && (
+            {data.canMedical && person.canAssess && (
               <button
                 disabled={busy || !online || queued(person)}
                 onClick={() =>

@@ -15,7 +15,7 @@ Rooms and activity teams: https://dyc-snowy.vercel.app/rooms-teams
 1. Review the event details and permission wording with DYC. Camp dates are 19–22 November 2026 at Pentecost Convention Center, Kasoa.
 2. Set the participant limit in Camp settings. Existing warrior records count toward the limit.
 3. In Rooms & teams, add the real accommodation blocks, room names and bed counts. Create activity teams separately. Use an active staff email for the team leader; mentor leaders can see their team roster without gaining extra clinical-history access.
-4. Create individual staff accounts. The Checkin role is for arrival-desk staff; the coordinator or medical lead assigns clinical care groups. Administrators can manage arrivals, rooms, teams, capacity and staff accounts without seeing clinical history.
+4. Create individual staff accounts. Every approved staff role can search all registrations and record arrival, including campers without a clinical group. The Checkin role is for dedicated arrival-desk staff; the coordinator or medical lead assigns clinical care groups. Administrators can manage arrivals, rooms, teams, capacity and staff accounts without seeing clinical history.
 5. Run a rehearsal on the actual phones/tablets and test searching, arrival confirmation and the printer. Keep a connected rooming desk available.
 
 ## Registration
@@ -24,7 +24,7 @@ The public four-step form does not require an account. Age is calculated on 19 N
 
 Answers stay in page memory between steps; drafts are not saved in browser storage. Registration and walk-in registration need a connection. The confirmation can be printed, including a guardian signature page for minors. Reported insulin and dosing are information for review, never an approved prescription.
 
-Staff can close/reopen the public form from Check-in. Closing it does not disable staff walk-in registration. Existing records are included in the arrival roster with unknown permissions/documents left outstanding; no consent is invented for existing records.
+Administrators can close/reopen the public form from Check-in. Closing it does not disable staff walk-in registration. Existing records are included in the arrival roster with unknown permissions/documents left outstanding; no consent is invented for existing records.
 
 ## Arrival desk
 
@@ -33,7 +33,7 @@ Staff can close/reopen the public form from Check-in. Closing it does not disabl
 3. Mark the participant as arrived. This does not certify that documents or medical review are complete.
 4. Check participation documents and, for a minor, the signed guardian permission form. Mark documents as checked only after verification.
 5. Allocate a room, an available bed and an activity team. A coordinator or medical lead also assigns the clinical care group so the right clinicians can access the care record.
-6. Clinical staff review the reported care information and mark the arrival assessment complete. Prescriptions and actual care remain in the existing clinical record.
+6. Clinical staff assigned to the camper review the reported care information and mark the arrival assessment complete. Prescriptions and actual care remain in the existing clinical record.
 
 Two participants cannot have the same managed bed. The server serializes registration, capacity and rooming writes, checks the current record version and checks bed availability again when saving. Rooms/teams with assigned participants cannot be retired. A room cannot be reduced below an assigned bed number. Retiring an unused resource preserves history.
 

@@ -8,6 +8,7 @@ import {
 import type { ServerDatabase, WriteTransaction } from "./postgres";
 export function operationPermissions(a: DeskActor) {
   return {
+    canCheckIn: true,
     canDesk:
       a.owner ||
       ["administrator", "coordinator", "checkin", "medical_lead"].includes(
@@ -32,10 +33,6 @@ export function opsVisible(a: DeskActor, w: { group_name: string }) {
   );
 }
 export async function operationSnapshot(db: ServerDatabase, a: DeskActor) {
-  if (a.role === "analyst")
-    throw new RequestError(
-      "403:Arrival-desk access is not included in this role.",
-    );
   const permissions = operationPermissions(a);
   return db.write(async (tx) => {
     await liveActor(tx, a);
@@ -43,26 +40,19 @@ export async function operationSnapshot(db: ServerDatabase, a: DeskActor) {
       "SELECT w.id,w.name,w.age,w.group_name,w.room,w.guardian,w.contact,r.reference,r.details,r.reported_care,r.arrival,r.arrived_at,r.documents,r.medical,r.room_id,r.bed,r.team_id,r.version FROM warriors w JOIN registrations r ON r.warrior_id=w.id ORDER BY w.name",
     );
     const teams = await tx.query("SELECT * FROM camp_teams ORDER BY name");
-    const ledTeams = new Set(
-      teams.filter((t) => t.leader === a.email).map((t) => t.id),
-    );
-    const people = rows
-      .filter(
-        (w) =>
-          opsVisible(a, w as any) ||
-          (a.role === "mentor" && ledTeams.has(w.team_id)),
-      )
-      .map((w) => {
-        const { reported_care, details, guardian, contact, ...rest } = w;
-        const d = { phone: contact, guardian, ...JSON.parse(details) };
-        return {
-          ...rest,
-          details: permissions.canDesk || permissions.canMedical ? d : {},
-          ...(permissions.canMedical
-            ? { care: JSON.parse(reported_care) }
-            : {}),
-        };
-      });
+    const people = rows.map((w) => {
+      const { reported_care, details, guardian, contact, ...rest } = w;
+      const clinicalAccess = permissions.canMedical && opsVisible(a, w as any);
+      const fullDetails = permissions.canDesk || clinicalAccess;
+      return {
+        ...rest,
+        details: fullDetails
+          ? { phone: contact, guardian, ...JSON.parse(details) }
+          : { phone: contact, guardian },
+        canAssess: clinicalAccess,
+        ...(clinicalAccess ? { care: JSON.parse(reported_care) } : {}),
+      };
+    });
     const rooms = await tx.query(
       "SELECT * FROM camp_rooms ORDER BY building,name",
     );
@@ -232,10 +222,10 @@ export async function operationWrite(
       "SELECT r.*,w.group_name FROM registrations r JOIN warriors w ON w.id=r.warrior_id WHERE r.warrior_id=?",
       [id],
     );
-    if (!r || !opsVisible(a, r as any))
+    if (!r || (action !== "arrival" && !opsVisible(a, r as any)))
       fail("404:Participant unavailable to this account.");
     if (action === "arrival") {
-      if (!permissions.canDesk) fail("403:Arrival-desk access is required.");
+      if (!permissions.canCheckIn) fail("403:Staff check-in access is required.");
       if (
         typeof input.commandId !== "string" ||
         !/^[0-9a-f-]{36}$/i.test(input.commandId)
