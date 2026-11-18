@@ -8,7 +8,8 @@ import {
 } from "react";
 import {
   ArrowLeft,
-  ArrowRight,
+  House,
+  LogIn,
   Check,
   CheckCircle2,
   CalendarDays,
@@ -307,11 +308,11 @@ export default function RegistrationForm({
           </p>
         </div>
         <a className="reg-staff-link" href="/login">
-          Staff sign in <ArrowRight size={15} />
+          <LogIn size={15} /> Staff sign in
         </a>
       </aside>
       <section className="reg-main">
-        {!walkin&&<a className="reg-home-link" href="/"><ArrowLeft size={15}/>Camp Victory home</a>}
+        {!walkin&&<a className="reg-home-link" href="/"><House size={15}/>Camp Victory home</a>}
         <div className="reg-mobile-brand">
           <img
             src="/dyc-logo-light.png"
@@ -661,8 +662,8 @@ export default function RegistrationForm({
                     ? "Submitting…"
                     : step === 3
                       ? "Submit registration"
-                      : "Continue"}
-                  {!busy && <ArrowRight size={17} />}
+                      : `Next: ${steps[step + 1]}`}
+                  {!busy && step === 3 && <Check size={17} />}
                 </button>
               </div>
             </form>

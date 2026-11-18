@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { ArrowRight, CalendarDays, MapPin, Phone, ShieldCheck, UserRoundPlus } from "lucide-react";
+import { LogIn, CalendarDays, MapPin, Phone, ShieldCheck, UserRoundPlus } from "lucide-react";
 import { CAMP } from "../lib/registration";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Camp Victory 2026 | Diabetes Youth Care", description: "Register a camper or sign in to your Camp Victory staff workspace." };
@@ -28,13 +28,13 @@ export default async function Home({ searchParams }: { searchParams: Promise<Rec
             <div className="welcome-option-top"><span className="welcome-option-icon"><UserRoundPlus size={23} /></span><span>REGISTRATION TEAM</span></div>
             <h2>Register a camper</h2>
             <p>Complete a camper’s details, save their confirmation, then start the next registration.</p>
-            <a className="welcome-action" href="/register">Start registration<ArrowRight size={19} /></a>
+            <a className="welcome-action" href="/register"><UserRoundPlus size={18} />Start registration</a>
           </article>
           <article className="welcome-option welcome-staff">
             <div className="welcome-option-top"><span className="welcome-option-icon"><ShieldCheck size={23} /></span><span>CAMP STAFF</span></div>
             <h2>Open your workspace</h2>
             <p>Sign in for check-in, rooms, teams and care tools assigned to your role.</p>
-            <a className="welcome-action" href="/login">Staff sign in<ArrowRight size={19} /></a>
+            <a className="welcome-action" href="/login"><LogIn size={18} />Staff sign in</a>
           </article>
         </section>
       </main>

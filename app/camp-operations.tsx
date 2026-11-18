@@ -8,8 +8,8 @@ import {
   type ReactNode,
 } from "react";
 import {
-  ArrowLeft,
-  ArrowRight,
+  Check,
+  ExternalLink,
   CheckCircle2,
   ClipboardCheck,
   Download,
@@ -512,7 +512,6 @@ export default function CampOperations({
               >
                 <span>{title}</span>
                 <strong>{n}</strong>
-                <ArrowRight size={15} />
               </button>
             ))}
           </div>
@@ -623,8 +622,7 @@ export default function CampOperations({
                       </td>
                       <td>
                         <button onClick={() => setSelected(p.id)}>
-                          Open
-                          <ArrowRight size={15} />
+                          View camper
                         </button>
                       </td>
                     </tr>
@@ -648,7 +646,7 @@ export default function CampOperations({
                 {data.canDesk && (
                   <a href="/register" target="_blank" rel="noreferrer">
                     Open participant registration
-                    <ArrowRight size={16} />
+                    <ExternalLink size={16} />
                   </a>
                 )}
               </div>
@@ -665,7 +663,7 @@ export default function CampOperations({
                 </p>
                 <a href="/register" target="_blank" rel="noreferrer">
                   Open registration form
-                  <ArrowRight size={15} />
+                  <ExternalLink size={15} />
                 </a>
               </div>
               <button
@@ -1140,8 +1138,8 @@ export default function CampOperations({
                 }
                 className="primary"
               >
+                <Check size={16} />
                 Save assignments
-                <ArrowRight size={16} />
               </button>
               <small className="ops-subline">
                 Room and bed changes are saved online to prevent double
@@ -1368,8 +1366,7 @@ export default function CampOperations({
                     setSelected(p.id);
                   }}
                 >
-                  Open
-                  <ArrowRight size={15} />
+                  View camper
                 </button>
               </div>
             ))}
