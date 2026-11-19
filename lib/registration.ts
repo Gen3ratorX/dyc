@@ -112,14 +112,14 @@ export function registrationInput(raw: unknown, step = 3): RegistrationInput {
   }
   if (!p.type1)
     fail(
-      "This camp is for young people living with Type 1 diabetes. Contact the camp team for other enquiries.",
+      "This camp is for people living with Type 1 diabetes. Contact the camp team for other enquiries.",
     );
   if (!p.name || p.name.length > 150)
     fail("Enter a full name of up to 150 characters.");
   const age = campAge(p.dob);
-  if (age < 0 || age >= 25)
+  if (age < 0)
     fail(
-      "Participants must be under 25 on 19 November 2026. Check the date of birth.",
+      "Enter a valid date of birth on or before 19 November 2026.",
     );
   if (!["Female", "Male", "Prefer not to say"].includes(p.gender))
     fail("Choose a gender option.");

@@ -22,7 +22,8 @@ for(const a of [admin,desk,coordinator,doctor,mentor,analyst,nurse,lead])sqlite.
 const sample={...blankRegistration,name:'Fictional Ama Example',dob:'2012-04-03',gender:'Female',type1:true,region:'Greater Accra',town:'Test town',phone:'0200000000',guardian:'Fictional Guardian',emergencyName:'Fictional Contact',emergencyPhone:'0200000001',emergencyPhone2:'0200000002',availability:'Yes',diagnosisYear:'2018',clinic:'Fictional Clinic',insulin:'Reported test insulin',insulinDoses:'TEST ONLY',otherMedicines:'None',support:'Synthetic support note',diet:'None',shirt:'M',guardianPermission:true,dataConsent:true,activitiesConsent:true,emergencyConsent:true,photoConsent:false,rulesConsent:true,truthConsent:true};
 assert.equal(campAge('2001-11-19'),25);assert.equal(campAge('2001-11-20'),24);assert.equal(campAge('2008-11-19'),18);assert.equal(campAge('2008-11-20'),17);assert.equal(campAge('2012-02-30'),-1);
 assert.equal(registrationInput(sample).photoConsent,false);
-for(const change of [{dob:'2001-11-19'},{dob:'2027-01-01'},{guardianPermission:false},{type1:false},{dataConsent:false},{photoConsent:null},{emergencyPhone:'invalid'},{diagnosisYear:'2000'},{shirt:'XXXX'}])assert.throws(()=>registrationInput({...sample,...change}));
+for(const dob of ['2001-11-19','1990-06-15','1960-01-01'])assert.equal(registrationInput({...sample,dob,guardian:'',guardianPermission:false}).dob,dob);
+for(const change of [{dob:'2027-01-01'},{dob:'2026-11-20'},{dob:'2012-02-30'},{guardianPermission:false},{type1:false},{dataConsent:false},{photoConsent:null},{emergencyPhone:'invalid'},{diagnosisYear:'2000'},{shirt:'XXXX'}])assert.throws(()=>registrationInput({...sample,...change}));
 const requestId=crypto.randomUUID(),receipt=await registerParticipant(db,sample,requestId);
 assert.match(receipt.reference,/^DYC26-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}$/);assert.deepEqual(Object.keys(receipt),['reference']);assert.deepEqual(await registerParticipant(db,sample,requestId),receipt);
 await assert.rejects(()=>registerParticipant(db,{...sample,name:'Different'},requestId),e=>e.status===409);
@@ -90,6 +91,13 @@ sqlite.prepare("UPDATE members SET active=0 WHERE role='checkin'").run();await a
 console.log('Registration and arrivals: eligibility, optional photos, deduplication/idempotency, capacity, clinical isolation, role/scope checks, atomic bed allocation, arrival retry/reversal, assessment and document workflow, registration closure and suspended accounts passed.');
 
 for(const path of ['app/camp-operations.tsx','app/register/registration-form.tsx'])assert.ok(!/qrcode|zxing|Scan QR|QRCode/i.test(readFileSync(path,'utf8')),'No QR generation or scanning in '+path);
+
+sqlite.prepare("UPDATE settings SET value='300' WHERE key='camp_capacity'").run();
+for(const [name,dob,staff] of [['Fictional adult public','2001-11-19',undefined],['Fictional older walk-in','1960-01-01',admin]]){
+ const receipt=await registerParticipant(db,{...sample,name,dob,guardian:'',guardianPermission:false},crypto.randomUUID(),staff);
+ const saved=sqlite.prepare('SELECT w.age,r.source FROM warriors w JOIN registrations r ON r.warrior_id=w.id WHERE r.reference=?').get(receipt.reference);
+ assert.equal(saved.age,campAge(dob));assert.equal(saved.source,staff?'walkin':'public');
+}
 
 const lookup={id:'DYC-test',name:'Fictional Ama',reference:'DYC26-AB12-CD34-EF56',details:{phone:'+233 20 000 0000'}};
 for(const search of ['fictional ama','dyc26ab12cd34ef56','AB12 CD34 EF56','AB12-CD34-EF56','+233200000000'])assert.ok(registrationMatches(lookup,search),search);

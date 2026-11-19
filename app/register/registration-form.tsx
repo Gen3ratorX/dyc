@@ -364,7 +364,7 @@ export default function RegistrationForm({
                 <p>
                   {
                     [
-                      "For young people under 25 living with Type 1 diabetes. A parent or guardian can complete this form.",
+                      "For people living with Type 1 diabetes, with no age limit. A parent or guardian can complete this form.",
                       "Share your current care details. The medical team will review them at camp.",
                       "Give us two emergency contact numbers and a few details for your stay.",
                       "Please read each statement. Photo and video permission is your choice.",
@@ -377,7 +377,7 @@ export default function RegistrationForm({
                   <>
                     {consent(
                       "type1",
-                      "I am registering a young person living with Type 1 diabetes.",
+                      "I am registering someone living with Type 1 diabetes.",
                     )}
                     {field("name", "Full name")}
                     <div className="reg-two">
@@ -391,7 +391,20 @@ export default function RegistrationForm({
                               return (
                                 <label key={title}>
                                   <span>{title}</span>
-                                  <select
+                                  {i === 2 ? (
+                                    <input
+                                      aria-label="Birth year"
+                                      type="text"
+                                      inputMode="numeric"
+                                      autoComplete="bday-year"
+                                      pattern="[0-9]{4}"
+                                      maxLength={4}
+                                      placeholder="YYYY"
+                                      required
+                                      value={parts[0] || ""}
+                                      onChange={(e) => update("dob", [e.target.value, parts[1] || "", parts[2] || ""].join("-"))}
+                                    />
+                                  ) : <select
                                     aria-label={"Birth " + title.toLowerCase()}
                                     required
                                     value={parts[index] || ""}
@@ -409,7 +422,7 @@ export default function RegistrationForm({
                                     {Array.from(
                                       {
                                         length:
-                                          i === 0 ? 31 : i === 1 ? 12 : 27,
+                                          i === 0 ? 31 : 12,
                                       },
                                       (_, n) => {
                                         const number =
@@ -438,7 +451,7 @@ export default function RegistrationForm({
                                         );
                                       },
                                     )}
-                                  </select>
+                                  </select>}
                                 </label>
                               );
                             },

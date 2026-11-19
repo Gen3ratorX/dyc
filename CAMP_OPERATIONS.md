@@ -20,7 +20,7 @@ Rooms and activity teams: https://dyc-snowy.vercel.app/rooms-teams
 
 ## Registration
 
-The public four-step form does not require an account. Age is calculated on 19 November 2026; participants must be under 25. Under-18 registrations require guardian permission and a signed guardian form at arrival. Photo/video permission can be refused without blocking registration. Applicants receive a readable registration reference. There is no public reference lookup that reveals participant information.
+The public four-step form does not require an account. There is no registration age limit. Age is calculated on 19 November 2026 from a valid date of birth on or before that date. Under-18 registrations require guardian permission and a signed guardian form at arrival. Photo/video permission can be refused without blocking registration. Applicants receive a readable registration reference. There is no public reference lookup that reveals participant information.
 
 Answers stay in page memory between steps; drafts are not saved in browser storage. Registration and walk-in registration need a connection. The confirmation can be printed, including a guardian signature page for minors. Reported insulin and dosing are information for review, never an approved prescription.
 
