@@ -16,7 +16,7 @@ export async function POST(req:Request){try{
  if(c.type==='seed'&&!owner)throw new RequestError('403:Only the camp owner can seed demo data.');
  if(c.type==='capacity'&&!owner&&role!=='administrator')throw new RequestError('403:Only a camp administrator can change participant capacity.');
  if(c.type==='members'&&!owner&&role!=='administrator')throw new RequestError('403:Only a camp administrator can manage staff.');
- if(c.warrior){const w=await db.prepare('SELECT * FROM warriors WHERE id=?').bind(c.warrior).first<any>();if(!w)throw new RequestError('404:Warrior not found.');if(!['medical_lead','coordinator'].includes(role)&&!groups.includes(w.group_name))throw new RequestError('403:This warrior is outside your assigned groups. Ask the camp administrator to check your assignment.');}
+ if(c.warrior){const w=await db.prepare('SELECT * FROM warriors WHERE id=?').bind(c.warrior).first<any>();if(!w)throw new RequestError('404:Warrior not found.');if(!(role==='doctor'&&c.type==='reading')&&!['medical_lead','coordinator'].includes(role)&&!groups.includes(w.group_name))throw new RequestError('403:This warrior is outside your assigned groups. Ask the camp administrator to check your assignment.');}
  else if(!['register','members','seed','capacity'].includes(c.type))throw new RequestError('A warrior is required.');
  if(c.type==='exception'&&p.status==='Not required'){if(!['medical_lead','doctor'].includes(role))throw new RequestError('403:Only a doctor can mark a check not required.');const existing=(await db.prepare('SELECT payload FROM entries WHERE warrior_id=? AND care_day=?').bind(c.warrior,p.careDay).all()).results;if(existing.some((e:any)=>JSON.parse(e.payload).slot===p.slot))throw new RequestError('409:This check already has a record. Add a care note to explain any correction.');}
  const now=new Date().toISOString();const queries:any[]=[];
@@ -25,7 +25,7 @@ export async function POST(req:Request){try{
  // role/group change cannot leave a write authorised by an earlier snapshot.
  queries.push(db.prepare('INSERT INTO atomic_guards (id,value) SELECT ?, CASE WHEN EXISTS (SELECT 1 FROM members WHERE email=? AND user_id=? AND active=1 AND role=? AND groups_json=?) THEN 1 ELSE 0 END').bind(c.id,email,user.userId,role,JSON.stringify(groups)));
  queries.push(db.prepare('DELETE FROM atomic_guards WHERE id=?').bind(c.id));
- if(c.warrior&&!['medical_lead','coordinator'].includes(role))atomic('EXISTS (SELECT 1 FROM warriors WHERE id=? AND group_name IN ('+groups.map(()=>'?').join(',')+'))',c.warrior,...groups);
+ if(c.warrior&&!(role==='doctor'&&c.type==='reading')&&!['medical_lead','coordinator'].includes(role))atomic('EXISTS (SELECT 1 FROM warriors WHERE id=? AND group_name IN ('+groups.map(()=>'?').join(',')+'))',c.warrior,...groups);
  if(c.type==='members'){queries.push(db.prepare("INSERT INTO atomic_guards (id,value) SELECT ?, CASE WHEN NOT EXISTS (SELECT 1 FROM members m JOIN settings s ON s.key='owner' AND s.value=m.user_id WHERE m.email=?) THEN 1 ELSE 0 END").bind(c.id,p.email.toLowerCase()));queries.push(db.prepare('DELETE FROM atomic_guards WHERE id=?').bind(c.id));}
  if(c.type==='members'&&p.active===false)queries.push(db.prepare('UPDATE staff_sessions SET revoked=1 WHERE user_id=(SELECT user_id FROM members WHERE email=?)').bind(p.email.toLowerCase()));
  const guard=()=>{queries.push(db.prepare('INSERT INTO atomic_guards (id,value) SELECT ?, changes()').bind(c.id));queries.push(db.prepare('DELETE FROM atomic_guards WHERE id=?').bind(c.id));};

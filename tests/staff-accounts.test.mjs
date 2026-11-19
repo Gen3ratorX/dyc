@@ -10,7 +10,8 @@ const input={email:' DOCTOR@EXAMPLE.INVALID ',fullName:'Synthetic Doctor',passwo
 assert.deepEqual(accountInput(input).groups,['Group A']);assert.equal(accountInput(input).email,'doctor@example.invalid');
 for(const password of ['', 'short', '            ','x'.repeat(73),'😀'.repeat(20)])assert.throws(()=>validatePassword(password));
 assert.equal(validatePassword('x'.repeat(72)).length,72);
-for(const bad of [{...input,role:'owner'},{...input,groups:[]},{...input,groups:['Group Z']},{...input,fullName:''},{...input,email:'bad'}])assert.throws(()=>accountInput(bad));
+for(const bad of [{...input,role:'owner'},{...input,role:'nurse',groups:[]},{...input,role:'mentor',groups:[]},{...input,groups:['Group Z']},{...input,fullName:''},{...input,email:'bad'}])assert.throws(()=>accountInput(bad));
+assert.deepEqual(accountInput({...input,groups:[]}).groups,[]);
 assert.equal(canManageStaff({owner:false,role:'doctor'}),false);assert.equal(canManageStaff({role:'administrator'}),true);
 let created=0,linked=0,removed=[],membership;
 const deps=()=>({actor:async()=>({role:'medical_lead',active:true,owner:true,sessionValid:true}),rateLimit:async()=>{},linkedAccount:async()=>false,create:async()=>{created++;return {id:'new-synthetic-id'};},link:async(data)=>{linked++;membership=data;},removeCreated:async id=>{removed.push(id);}});

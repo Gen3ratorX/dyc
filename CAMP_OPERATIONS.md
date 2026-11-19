@@ -18,6 +18,8 @@ Rooms and activity teams: https://dyc-snowy.vercel.app/rooms-teams
 4. Create individual staff accounts. Every approved staff role can search all registrations and record arrival, including campers without a clinical group. The Checkin role is for dedicated arrival-desk staff; the coordinator or medical lead assigns clinical care groups. Administrators can manage arrivals, rooms, teams, capacity and staff accounts without seeing clinical history.
 5. Run a rehearsal on the actual phones/tablets and test searching, arrival confirmation and the printer. Keep a connected rooming desk available.
 
+Doctors can find all campers and record glucose without assigned care groups, including unassigned campers. Other clinical history and actions remain restricted to their assigned groups. Doctor accounts may have no groups. Nurses and mentors still require groups.
+
 ## Registration
 
 The public four-step form does not require an account. There is no registration age limit. Age is calculated on 19 November 2026 from a valid date of birth on or before that date. Under-18 registrations require guardian permission and a signed guardian form at arrival. Photo/video permission can be refused without blocking registration. Applicants receive a readable registration reference. There is no public reference lookup that reveals participant information.

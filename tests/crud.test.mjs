@@ -117,6 +117,28 @@ as('analyst');const analyst=await(await camp.GET()).json();assert.ok(analyst.war
 const exported=await exportsRoute.POST(new Request('https://camp.test/api/exports',{method:'POST',headers:{Origin:'https://camp.test','Content-Type':'application/json'},body:JSON.stringify({careDay:day,scope:'All groups'})}));assert.equal(exported.status,200);const csv=await exported.text();assert.ok(!csv.includes(warrior)&&!csv.includes('owner@example.invalid'));
 assert.equal(sqlite.prepare('SELECT count(*) n FROM export_events').get().n,1);
 assert.equal(sqlite.prepare("SELECT count(*) n FROM commands WHERE body LIKE '%Synthetic secret%'").get().n,0);
+// Doctors without groups can record glucose globally, including unassigned
+// campers, while other clinical history/actions remain scoped.
+sqlite.prepare("UPDATE members SET groups_json='[]' WHERE user_id='doctor'").run();
+for(const [id,group] of [['GLOBAL-GROUP-B','Group B'],['GLOBAL-UNASSIGNED','Unassigned']]){
+ sqlite.prepare('INSERT INTO warriors VALUES(?,?,12,?,?,?, ?,?,1)').run(id,'Synthetic '+id,group,'Test room','Private guardian','Private contact','Private allergy');
+ as('doctor');await expect(send('reading',reading,id),200);
+ await expect(send('note',{...reading,note:'Out-of-group care note'},id),403);
+ await expect(send('regimen',{medicine:'Test',dose:'Test',instructions:'Test',baseVersion:0},id),403);
+ as('nurse');await expect(send('reading',reading,id),403);
+}
+as('doctor');const glucoseCamp=await(await camp.GET()).json();
+assert.ok(glucoseCamp.warriors.some(w=>w.id==='GLOBAL-UNASSIGNED'&&w.glucoseOnly));
+assert.ok(glucoseCamp.warriors.every(w=>!w.contact&&!w.guardian&&!w.allergies));
+assert.ok(glucoseCamp.entries.every(e=>e.kind==='reading'));
+assert.equal(glucoseCamp.regimens.length,0);assert.equal(glucoseCamp.reviews.length,0);
+const beforeReadings=sqlite.prepare('SELECT count(*) n FROM entries').get().n;
+beforeBatch=()=>sqlite.prepare("UPDATE members SET active=0 WHERE user_id='doctor'").run();
+await expect(send('reading',reading,'GLOBAL-UNASSIGNED'),409);
+assert.equal(sqlite.prepare('SELECT count(*) n FROM entries').get().n,beforeReadings);
+sqlite.prepare("UPDATE members SET active=1 WHERE user_id='doctor'").run();
+as('admin');await expect(send('members',{email:'new-doctor@example.invalid',role:'doctor',groups:[],active:true}),200);
+
 // EXPLAIN-only production SQL probe: validate generated syntax without executing
 // the writes or touching any real camp record.
 if(process.env.DYC_CRUD_SQL_OUTPUT){
@@ -131,7 +153,8 @@ assert.ok(ui.includes('payload.version = formVersions.current.warrior'));
 assert.ok(ui.includes('payload.baseCapacity=formVersions.current.capacity'));
 assert.ok(ui.includes('const regimen = formRegimen;'));
 const {workspaceExperience}=await import(encode(compile('lib/workspace-experience.ts')));
-for(const role of ['doctor','nurse','mentor']){const x=workspaceExperience(role);assert.equal(x.home,'Overview');assert.equal(x.navigation.includes('Sync centre'),false);assert.equal(x.titles.Settings,'My account');}
+for(const role of ['nurse','mentor']){const x=workspaceExperience(role);assert.equal(x.home,'Overview');assert.equal(x.navigation.includes('Sync centre'),false);assert.equal(x.titles.Settings,'My account');}
+assert.equal(workspaceExperience('doctor').home,'Warriors');
 assert.equal(workspaceExperience('coordinator').home,'Check-in');assert.equal(workspaceExperience('analyst').home,'Reports');assert.equal(workspaceExperience('administrator').home,'Settings');assert.equal(workspaceExperience('medical_lead',true).admin,true);assert.equal(workspaceExperience('mentor').navigation.includes('Reports'),false);
 console.log('Capacity checks passed: admin/owner only, numeric limits, stale settings, minimum registered count, full-camp refusal and concurrent registration guard. Role-specific navigation and home screens passed.');
 console.log('CRUD route checks passed: persisted creates/reads, idempotent retries, stale writes, prescription history, administrations, review lifecycle, scoped writes during reassignment, handover suspension race, staff permission CAS, session suspension, field filtering and audited exports.');

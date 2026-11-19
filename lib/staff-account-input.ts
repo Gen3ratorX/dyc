@@ -16,7 +16,7 @@ export function accountInput(value:unknown){
  if(!staffRoles.includes(input.role as any))invalid('Choose a staff role.');
  if(!Array.isArray(input.groups)||input.groups.some(g=>typeof g!=='string'||!/^Group [A-T]$/.test(g)))invalid('Choose valid camp groups.');
  const groups=[...new Set(input.groups as string[])];
- if(['doctor','nurse','mentor'].includes(String(input.role))&&!groups.length)invalid('Assign at least one group for this role.');
+ if(['nurse','mentor'].includes(String(input.role))&&!groups.length)invalid('Assign at least one group for this role.');
  const password=validatePassword(input.password);
  return {email,fullName,role:input.role as typeof staffRoles[number],groups:['medical_lead','coordinator','analyst','administrator','checkin'].includes(String(input.role))?[]:groups,password};
 }
