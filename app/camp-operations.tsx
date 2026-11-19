@@ -31,6 +31,7 @@ import type {
   OpsTeam,
 } from "../lib/registration";
 import RegistrationForm from "./register/registration-form";
+import RoomOccupancy from "./room-occupancy";
 import { registrationMatches } from "../lib/registration";
 function Dialog({
   title,
@@ -399,7 +400,7 @@ export default function CampOperations({
           </h1>
           <p>
             {configuration
-              ? "A place to stay. A team to belong to. Clinical groups are assigned separately."
+              ? "View room assignments, remaining beds and activity teams."
               : data.canDesk
                 ? "Find a participant, confirm their details and record their arrival."
                 : "Find any registered camper, confirm their details and record arrival."}
@@ -685,7 +686,9 @@ export default function CampOperations({
           )}
         </>
       ) : (
-        <div className="ops-setup-grid">
+        <div className={"ops-setup-grid"+(data.canConfigure?" ops-admin-room-grid":"")}>
+          {data.canConfigure && <RoomOccupancy rooms={data.rooms} people={data.people} online={online} onCamper={setSelected} onEdit={room=>{setEditing(room);setModal("room");}} />}
+          {!data.canConfigure && <>
           <section className="panel">
             <div className="panel-heading">
               <div>
@@ -748,6 +751,7 @@ export default function CampOperations({
               </div>
             )}
           </section>
+          </>}
           <section className="panel">
             <div className="panel-heading">
               <div>

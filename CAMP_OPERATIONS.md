@@ -39,6 +39,8 @@ Administrators can close/reopen the public form from Check-in. Closing it does n
 
 Two participants cannot have the same managed bed. The server serializes registration, capacity and rooming writes, checks the current record version and checks bed availability again when saving. Rooms/teams with assigned participants cannot be retired. A room cannot be reduced below an assigned bed number. Retiring an unused resource preserves history.
 
+Administrators can open Rooms & teams to see each room's campers, bed numbers, arrival status and remaining bed numbers without opening individual rosters. Search by room or camper, filter by floor or available beds, and export the displayed rooms as CSV. Remaining beds exclude reservations for campers who have not arrived. Inactive rooms do not contribute to available capacity; rooms with missing or duplicate bed assignments show a review warning rather than reporting available beds.
+
 A mistaken arrival can be reversed with a reason. This preserves room/team assignments and the audit history. Repeat arrival requests do not overwrite the original arrival time. Staff changes and desk actions are audited in the private database.
 
 Operational CSV exports and printable rosters omit clinical history. Name badges include name, team, room and registration reference. Treat printed rosters and downloaded CSVs as staff material.
