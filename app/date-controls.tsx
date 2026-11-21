@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { CalendarDays, ChevronLeft, ChevronRight, Check, Clock3 } from 'lucide-react';
 
 function dateText(value: string) {
@@ -28,15 +28,33 @@ export function CampDate({ value, onChange, name, label }: { value: string; onCh
 }
 
 export function CampTime({ value, onChange }: { value: string; onChange: (value: string) => void }) {
-  const [parts, setParts] = useState(value.split(':'));
-  useEffect(() => setParts(value.split(':')), [value]);
-  function update(part: number, text: string) {
-    if (!/^\d{0,2}$/.test(text)) return;
-    const draft = [...parts]; draft[part] = text; setParts(draft);
-    if (!text) return;
-    const number = Number(text);
-    if (number > (part === 0 ? 23 : 59)) return;
-    const pieces = value.split(':'); pieces[part] = text.padStart(2, '0'); onChange(pieces.join(':'));
+  const [hour,setHour]=useState('12');
+  const [minute,setMinute]=useState('00');
+  const [period,setPeriod]=useState<'AM'|'PM'>('AM');
+  const editing=useRef(false);
+  const sync=useCallback((raw:string)=>{
+    const [hourText='00',minuteText='00']=raw.split(':');
+    const hour24=Number(hourText);
+    setHour(String(hour24%12||12));
+    setMinute(String(Number(minuteText)||0).padStart(2,'0'));
+    setPeriod(hour24>=12?'PM':'AM');
+  },[]);
+  useEffect(()=>{if(!editing.current)sync(value);},[sync,value]);
+  function commit(nextHour:string,nextMinute:string,nextPeriod:'AM'|'PM'){
+    if(!/^(?:[1-9]|1[0-2])$/.test(nextHour)||!/^\d{1,2}$/.test(nextMinute)||Number(nextMinute)>59)return;
+    const hour12=Number(nextHour);
+    const hour24=(hour12%12)+(nextPeriod==='PM'?12:0);
+    onChange(`${String(hour24).padStart(2,'0')}:${String(Number(nextMinute)).padStart(2,'0')}`);
   }
-  return <div className="camp-time"><Clock3 size={16} /><input type="hidden" name="measurementTime" value={value} /><input aria-label="Hour (24-hour clock)" type="number" min="0" max="23" value={parts[0]} onFocus={event => event.target.select()} onChange={event => update(0, event.target.value)} required /><span>:</span><input aria-label="Minute" type="number" min="0" max="59" value={parts[1]} onFocus={event => event.target.select()} onChange={event => update(1, event.target.value)} required /><small>GMT · 24h</small></div>;
+  function editHour(text:string){if(!/^\d{0,2}$/.test(text))return;editing.current=true;setHour(text);commit(text,minute,period);}
+  function editMinute(text:string){if(!/^\d{0,2}$/.test(text))return;editing.current=true;setMinute(text);commit(hour,text,period);}
+  function editPeriod(next:'AM'|'PM'){editing.current=true;setPeriod(next);commit(hour,minute,next);}
+  return <div className="camp-time" onFocusCapture={()=>{editing.current=true;}} onBlurCapture={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node|null)){editing.current=false;sync(value);}}}>
+    <Clock3 size={16}/><input type="hidden" name="measurementTime" value={value}/>
+    <input aria-label="Hour" type="text" inputMode="numeric" pattern="(?:[1-9]|1[0-2])" maxLength={2} value={hour} onFocus={event=>event.target.select()} onChange={event=>editHour(event.target.value)} required/>
+    <span>:</span>
+    <input aria-label="Minute" type="text" inputMode="numeric" pattern="(?:[0-9]|[0-5][0-9])" maxLength={2} value={minute} onFocus={event=>event.target.select()} onChange={event=>editMinute(event.target.value)} required/>
+    <select aria-label="AM or PM" value={period} onChange={event=>editPeriod(event.target.value as 'AM'|'PM')}><option>AM</option><option>PM</option></select>
+    <small>GMT</small>
+  </div>;
 }

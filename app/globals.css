@@ -405,3 +405,10 @@ select:not([multiple]):not([size]):disabled{cursor:not-allowed}.reg-birthday sel
 .triage-day-filter .date-trigger{min-height:40px}
 .triage-day-filter>span{color:#708398;font-size:11px}
 @media(max-width:640px){.triage-day-filter{align-items:flex-start;flex-direction:column;gap:8px}.triage-day-filter>span{font-size:10px}}
+.camp-time>input[type=text]{width:34px;min-width:34px;min-height:40px;padding:4px 0;border:0;outline:none!important;box-shadow:none!important;text-align:center;font-variant-numeric:tabular-nums;font-size:15px;background:transparent}
+.camp-time>select{width:61px;min-width:61px;min-height:36px;padding:4px 5px;border:1px solid #dce5ed;border-radius:6px;background:#fff;color:#234b69;font-size:12px;text-align:center}
+.camp-time>small{margin-left:auto}
+.error-message>span{flex:1;min-width:0}
+.error-edit-button{flex:0 0 auto;min-height:32px;padding:5px 10px;border-color:#e7c8bb;background:#fffaf8;color:#8c503e;font-size:11px}
+.error-edit-button:hover{background:#fff;color:#713e30}
+@media(max-width:760px){.camp-time>input[type=text]{font-size:16px;width:38px;min-width:38px}.camp-time>select{font-size:13px}}
