@@ -399,3 +399,9 @@ select:not([multiple]):not([size]):disabled{cursor:not-allowed}.reg-birthday sel
 .triage-footnote{padding:11px 20px;border-top:1px solid #edf1f4;color:#75879a;font-size:10px}
 @media(max-width:900px){.triage-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.triage-case{grid-template-columns:minmax(180px,1.1fr) minmax(130px,.7fr) minmax(160px,1fr);gap:12px}}
 @media(max-width:640px){.admin-triage-page .page-heading{align-items:flex-start}.admin-triage-page .page-heading h1{font-size:29px}.triage-refresh{min-height:38px;padding:0 10px;font-size:11px}.triage-list-heading{align-items:stretch;flex-direction:column;padding:17px 15px 13px}.triage-search{width:100%}.triage-filter{padding:0 15px 12px}.triage-case{grid-template-columns:minmax(0,1fr) auto;gap:11px;padding:14px 15px}.triage-case-person{grid-column:1}.triage-case-state{grid-column:2;grid-row:1;justify-items:end;text-align:right}.triage-case-owner{grid-column:1/-1;padding-left:47px}.triage-footnote{padding-left:15px}.triage-metric{padding:13px;gap:9px}.triage-metric-icon{width:34px;height:34px}.triage-metric strong{font-size:23px}.triage-metric>div>span{font-size:10px}}
+.triage-day-filter{display:flex;align-items:center;gap:14px;padding:12px 16px}
+.triage-day-filter>strong{color:#345873;font-size:12px}
+.triage-day-filter>.camp-date{position:relative;z-index:3}
+.triage-day-filter .date-trigger{min-height:40px}
+.triage-day-filter>span{color:#708398;font-size:11px}
+@media(max-width:640px){.triage-day-filter{align-items:flex-start;flex-direction:column;gap:8px}.triage-day-filter>span{font-size:10px}}
