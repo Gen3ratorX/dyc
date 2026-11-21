@@ -14,6 +14,7 @@ import { useCamp } from '../lib/use-camp';
 import {syncStatus} from '../lib/sync-status';
 import {workspaceExperience} from '../lib/workspace-experience';
 import CampOperations from './camp-operations';
+import AdminTriage from './admin-triage';
 import LiveClock from './clock';
 import {PasswordField} from './password-field';
 import {readWorkspaceRoute,workspaceHref,type WorkspaceRoute,type Destination} from '../lib/navigation';
@@ -24,6 +25,7 @@ const GROUPS = Array.from({ length: 20 }, (_, i) => `Group ${String.fromCharCode
 const TITLES: Record<string, string> = {
   Overview: 'Camp overview', Warriors: 'Warriors', Warrior: 'Warrior record',
   'Clinical review': 'Clinical reviews', Reports: 'Reports & exports',
+  Triage: 'Triage',
   'Check-in':'Check-in', 'Rooms & teams':'Rooms & teams', 'Sync centre': 'Sync centre', Settings: 'Camp settings',
 };
 const MODALS: Record<string, string> = {
@@ -352,7 +354,7 @@ export default function Pilot() {
       <div className="camp-switch"><span className="camp-monogram" aria-hidden="true">CV</span><div><span className="camp-context-label">CURRENT CAMP</span><strong>Camp Victory</strong><small>2026 camp workspace</small></div><span className="camp-live" aria-label="Camp workspace" /></div>
       <span className="nav-label">WORKSPACE</span>
       <nav aria-label="Main navigation">{[
-        ['Check-in', ClipboardCheck], ['Rooms & teams', Users], ['Overview', LayoutDashboard], ['Warriors', Users], ['Clinical review', Stethoscope],
+        ['Check-in', ClipboardCheck], ['Rooms & teams', Users], ['Triage', HeartPulse], ['Overview', LayoutDashboard], ['Warriors', Users], ['Clinical review', Stethoscope],
         ['Reports', FileSpreadsheet], ['Sync centre', RefreshCw], ['Settings', Settings],
       ].filter(([name])=>experience.navigation.includes(name as Destination)||(name==='Sync centre'&&ownQueue.length>0)).map(([name, Icon]: any) => <a key={name} {...linkTo(name)} aria-current={tab===name||(tab==='Warrior'&&name==='Warriors')?'page':undefined} className={tab === name || (tab === 'Warrior' && name === 'Warriors') ? 'active' : ''}><Icon size={19} strokeWidth={1.7} /><span>{screenTitle(name)}</span>{name === 'Clinical review' && activeReviews.length > 0 && <b className="nav-badge">{activeReviews.length}</b>}{name === 'Sync centre' && ownQueue.length > 0 && <b className="nav-badge">{ownQueue.length}</b>}</a>)}</nav>
       {role!=='administrator'&&!simpleStaff&&scopedGroups.length > 0 && <div className="quick-groups"><span className="nav-label">YOUR GROUPS <small>{scopedGroups.length}</small></span>{scopedGroups.slice(0, 3).map((name, index) => <a key={name} {...linkTo('Overview',{group:name})} aria-current={groupView&&group===name?'page':undefined} className={groupView && group === name ? 'selected-group' : ''}><span className={`group-symbol group-symbol-${index}`}>{name.slice(-1)}</span><span>{name}</span><small>{warriors.filter(warrior => warrior.group_name === name).length}</small></a>)}<a className="all-groups" {...linkTo('Warriors')}>View all groups</a></div>}
@@ -376,6 +378,7 @@ export default function Pilot() {
         {error && !modal && <div className="error-message" role="alert">{error}<button className="icon-button" aria-label="Dismiss error" onClick={() => setError('')}><X size={16} /></button></div>}
 
         {['Check-in','Rooms & teams'].includes(tab)&&<CampOperations camp={camp} section={tab} online={online} offlineEnabled={store.offlineEnabled} pending={pending} send={send} refresh={store.refresh}/>}
+        {tab==='Triage'&&experience.admin&&<AdminTriage/>}
         {tab==='Overview'&&!scopedGroups.length&&<Empty title={role==='administrator'?'System access':'No groups assigned'} action={<button onClick={()=>navigate('Settings')}>View account details</button>}>{role==='administrator'?'Your administrator role does not include access to warrior records.':'Ask your camp administrator to assign you to a group before recording care.'}</Empty>}
         {tab === 'Overview' && scopedGroups.length>0 && <>
           <div className="page-heading overview-heading"><div><div className="care-signature"><svg aria-hidden="true" viewBox="0 0 38 22" fill="none"><path d="M2 18C8 18 8 6 17 6S26 18 36 4" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/><circle cx="10" cy="4" r="3" fill="#009EFF"/><circle cx="26" cy="7" r="3" fill="#16FFFF"/></svg><span>CAMP VICTORY STAFF ACCOUNTS</span></div><h1>{simpleStaff?screenTitle('Overview'):groupView?`${group} overview`:'Camp overview'}<span className="heading-dot">.</span></h1><p>{simpleStaff?(role==='mentor'?'Record checks and request help for your assigned warriors.':'Record care and follow up on clinical reviews for your groups.'):groupView?`Readings, warriors and care updates for ${group}.`:'Monitor readings and coordinate care across all groups.'}</p>{groupView&&!simpleStaff&&<button className="group-overview-back text-button" onClick={()=>navigate('Overview')}><ArrowLeft size={14}/>Back to camp overview</button>}</div><div className="heading-actions"><CampDate label="Care day" value={day} onChange={setDay} />{can(role, 'reading') && <button className="primary" onClick={() => open('reading')}><Plus size={17} />Record glucose</button>}</div></div>

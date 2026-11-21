@@ -1,5 +1,5 @@
 export const destinations = {
- 'Check-in':'/check-in', 'Rooms & teams':'/rooms-teams', Overview:'/overview', Warriors:'/warriors', 'Clinical review':'/clinical-reviews',
+ 'Check-in':'/check-in', 'Rooms & teams':'/rooms-teams', Overview:'/overview', Warriors:'/warriors', 'Clinical review':'/clinical-reviews', Triage:'/triage',
  Reports:'/reports', 'Sync centre':'/sync', Settings:'/settings',
 } as const;
 export type Destination=keyof typeof destinations|'Warrior';

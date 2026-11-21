@@ -353,3 +353,49 @@ select:not([multiple]):not([size]):disabled{cursor:not-allowed}.reg-birthday sel
 .room-allocation-warning{margin:12px 16px;padding:12px;background:#fff5e8;color:#87591d;border-radius:10px;font-size:14px;line-height:1.6}
 @media(max-width:1100px){.room-occupancy-filters{flex-wrap:wrap}.room-occupancy-filters .search-field{flex-basis:100%}.room-occupancy-filters>label:not(.search-field){flex:1}.room-occupancy-filters select{max-width:none}}
 @media(max-width:700px){.room-occupancy-heading{align-items:start;flex-direction:column;gap:14px}.room-occupancy-heading h2{font-size:25px}.room-occupancy-totals{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.room-occupancy-totals>div{padding:18px}.room-occupancy-totals dd{font-size:30px}.room-occupancy-filters{padding:16px;gap:12px}.room-occupancy-filters>label:not(.search-field){min-width:100%;width:100%}.room-occupancy-filters select{font-size:16px}.room-occupancy-grid{grid-template-columns:minmax(0,1fr)}.room-occupants li{grid-template-columns:44px minmax(0,1fr) auto;gap:7px;padding:10px 14px}.room-arrival-label{font-size:12px}}
+.admin-triage-page{display:grid;gap:18px}
+.admin-triage-page .page-heading{align-items:center;margin-bottom:0}
+.triage-refresh{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:0 14px;border:1px solid #d6e2ec;border-radius:9px;background:#fff;color:#235478;font-size:12px;font-weight:600}
+.triage-refresh:disabled{opacity:.65;cursor:wait}
+.triage-privacy-note{display:flex;align-items:flex-start;gap:10px;padding:13px 15px;border:1px solid #d8eaf5;border-radius:12px;background:#f0f8fd;color:#315c77}
+.triage-privacy-note>svg{flex:0 0 auto;color:#007bc4;margin-top:1px}
+.triage-privacy-note p{font-size:12px;line-height:1.65;margin:0}
+.triage-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.triage-metric{display:flex;align-items:center;gap:12px;padding:16px}
+.triage-metric-icon{display:grid;place-items:center;width:38px;height:38px;flex:0 0 auto;border-radius:11px;background:#eaf6fd;color:#007bc4}
+.triage-metric-icon.triage-waiting{background:#fff5e6;color:#a56307}
+.triage-metric-icon.triage-covered{background:#eaf7f1;color:#268058}
+.triage-metric-icon.triage-handover{background:#f1eefb;color:#7159a4}
+.triage-metric>div{display:grid;gap:4px;min-width:0}
+.triage-metric strong{font-family:var(--font-display);font-size:26px;line-height:1;font-variant-numeric:tabular-nums;color:#123b60}
+.triage-metric>div>span{font-size:11px;line-height:1.4;color:#61758a}
+.triage-list-panel{overflow:hidden}
+.triage-list-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding:20px 20px 16px}
+.triage-list-heading .eyebrow{font-size:9px;color:#7591a8;letter-spacing:1.2px;font-weight:700}
+.triage-list-heading h2{margin:5px 0 0;color:#123b60;font-size:20px}
+.triage-search{display:flex;align-items:center;gap:8px;width:min(100%,320px);min-height:42px;padding:0 12px;border:1px solid #d4e0e9;border-radius:9px;background:#fbfdff;color:#71869a}
+.triage-search:focus-within{border-color:#008fdf;box-shadow:0 0 0 3px #009eff18}
+.triage-search input{width:100%;min-width:0;border:0;outline:0;background:transparent;color:#173e5e;font-size:12px}
+.triage-filter{display:flex;gap:7px;overflow:auto;padding:0 20px 14px;border-bottom:1px solid #edf1f4}
+.triage-filter button{display:inline-flex;align-items:center;gap:7px;flex:0 0 auto;min-height:34px;padding:0 11px;border:1px solid #e0e8ee;border-radius:99px;background:#fff;color:#567087;font-size:11px;font-weight:550}
+.triage-filter button.selected{border-color:#a8d9f4;background:#edf8ff;color:#006eaa}
+.triage-filter button span{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 4px;border-radius:99px;background:#d9effc;color:#006eaa;font-size:10px}
+.triage-case-list{display:grid}
+.triage-case{display:grid;grid-template-columns:minmax(200px,1.2fr) minmax(150px,.8fr) minmax(180px,1fr);align-items:center;gap:18px;padding:16px 20px;border-bottom:1px solid #edf1f4}
+.triage-case:last-child{border-bottom:0}
+.triage-case-person{display:flex;align-items:center;gap:11px;min-width:0}
+.triage-person-icon{display:grid;place-items:center;width:36px;height:36px;flex:0 0 auto;border-radius:10px 10px 10px 4px;background:#edf7fc;color:#1781b9}
+.triage-case-person>div,.triage-case-owner{display:grid;gap:4px;min-width:0}
+.triage-case-person strong,.triage-case-owner strong{overflow:hidden;color:#173e5e;font-size:12px;font-weight:650;text-overflow:ellipsis;white-space:nowrap}
+.triage-case-person>div>span,.triage-case-owner small,.triage-case-state small{color:#708398;font-size:10px;line-height:1.45}
+.triage-case-state{display:grid;justify-items:start;gap:6px}
+.triage-case-kind{color:#37617c;font-size:10px;font-weight:650}
+.triage-case-state .status{font-size:10px}
+.triage-handover-note{color:#7654a1;font-size:10px;line-height:1.4}
+.triage-loading,.triage-empty{padding:34px 18px;text-align:center;color:#6a8094;font-size:12px}
+.triage-empty-icon{display:grid;place-items:center;width:42px;height:42px;margin:0 auto 10px;border-radius:12px;background:#eef8f3;color:#338560}
+.triage-empty h3{margin:0 0 6px;color:#234b69;font-size:15px}
+.triage-empty p{margin:0;font-size:11px;line-height:1.6}
+.triage-footnote{padding:11px 20px;border-top:1px solid #edf1f4;color:#75879a;font-size:10px}
+@media(max-width:900px){.triage-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.triage-case{grid-template-columns:minmax(180px,1.1fr) minmax(130px,.7fr) minmax(160px,1fr);gap:12px}}
+@media(max-width:640px){.admin-triage-page .page-heading{align-items:flex-start}.admin-triage-page .page-heading h1{font-size:29px}.triage-refresh{min-height:38px;padding:0 10px;font-size:11px}.triage-list-heading{align-items:stretch;flex-direction:column;padding:17px 15px 13px}.triage-search{width:100%}.triage-filter{padding:0 15px 12px}.triage-case{grid-template-columns:minmax(0,1fr) auto;gap:11px;padding:14px 15px}.triage-case-person{grid-column:1}.triage-case-state{grid-column:2;grid-row:1;justify-items:end;text-align:right}.triage-case-owner{grid-column:1/-1;padding-left:47px}.triage-footnote{padding-left:15px}.triage-metric{padding:13px;gap:9px}.triage-metric-icon{width:34px;height:34px}.triage-metric strong{font-size:23px}.triage-metric>div>span{font-size:10px}}
