@@ -12,6 +12,7 @@ export async function GET(request:Request){try{
  const requestedDay=new URL(request.url).searchParams.get('day')||today;
  if(!validDay(requestedDay))throw new RequestError('400:Choose a valid care day.');
  const readings=(await db.prepare("SELECT e.id,e.warrior_id,e.payload,e.measured_at,w.name,w.group_name,w.room FROM entries e JOIN warriors w ON w.id=e.warrior_id WHERE e.kind='reading' AND e.care_day=? ORDER BY e.measured_at DESC LIMIT 10000").bind(requestedDay).all()).results as any[];
+ const readingDays=(await db.prepare("SELECT care_day,COUNT(*) AS reading_count FROM entries WHERE kind='reading' GROUP BY care_day ORDER BY care_day DESC").all()).results as any[];
  const reviews=(await db.prepare('SELECT r.id,r.warrior_id,r.status,r.owner,r.proposed_owner,r.created_at,r.updated_at,w.name,w.group_name,w.room FROM reviews r JOIN warriors w ON w.id=r.warrior_id ORDER BY r.updated_at DESC LIMIT 5000').all()).results as any[];
  const latestFlags=new Map<string,{reading:any;flag:'HI'|'LO'}>();
  for(const reading of readings){
@@ -33,5 +34,5 @@ export async function GET(request:Request){try{
   cases.push({id:`review-${review.id}`,kind:'staff_request',status:review.status,owner:review.owner,proposed_owner:review.proposed_owner,created_at:review.created_at,name:review.name,group_name:review.group_name,room:review.room});
  }
  cases.sort((a,b)=>String(a.created_at).localeCompare(String(b.created_at)));
- return Response.json({cases:cases.slice(0,500),careDay:requestedDay,currentCareDay:today},{headers:secureHeaders});
+ return Response.json({cases:cases.slice(0,500),careDay:requestedDay,currentCareDay:today,readingCount:readings.length,readingDays:readingDays.map(row=>({care_day:String(row.care_day),reading_count:Number(row.reading_count)||0}))},{headers:secureHeaders});
 }catch(error){return failure(error);}}

@@ -404,6 +404,13 @@ select:not([multiple]):not([size]):disabled{cursor:not-allowed}.reg-birthday sel
 .triage-day-filter>.camp-date{position:relative;z-index:3}
 .triage-day-filter .date-trigger{min-height:40px}
 .triage-day-filter>span{color:#708398;font-size:11px}
+.triage-reading-days{display:flex;align-items:center;gap:14px;padding:0 2px}
+.triage-reading-days>strong{flex:0 0 auto;color:#345873;font-size:11px}
+.triage-reading-days>div{display:flex;flex-wrap:wrap;gap:7px}
+.triage-reading-days button{display:inline-flex;align-items:center;gap:8px;min-height:30px;padding:0 10px;border:1px solid #dce6ee;border-radius:99px;background:#fff;color:#567087;font-size:10px}
+.triage-reading-days button.selected{border-color:#a8d9f4;background:#edf8ff;color:#006eaa}
+.triage-reading-days button b{color:#006eaa;font-variant-numeric:tabular-nums}
+@media(max-width:640px){.triage-reading-days{align-items:flex-start;flex-direction:column;gap:8px}.triage-reading-days>div{gap:6px}.triage-reading-days button{font-size:9px}}
 @media(max-width:640px){.triage-day-filter{align-items:flex-start;flex-direction:column;gap:8px}.triage-day-filter>span{font-size:10px}}
 .camp-time>input[type=text]{width:34px;min-width:34px;min-height:40px;padding:4px 0;border:0;outline:none!important;box-shadow:none!important;text-align:center;font-variant-numeric:tabular-nums;font-size:15px;background:transparent}
 .camp-time>select{width:61px;min-width:61px;min-height:36px;padding:4px 5px;border:1px solid #dce5ed;border-radius:6px;background:#fff;color:#234b69;font-size:12px;text-align:center}

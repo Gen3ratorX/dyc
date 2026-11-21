@@ -6,6 +6,7 @@ import {careDay} from '../lib/domain';
 import {CampDate} from './date-controls';
 
 type TriageCase={id:string;kind:'meter_flag'|'staff_request';flag?:'HI'|'LO';status:string;owner:string;proposed_owner:string|null;created_at:string;name:string;group_name:string;room:string};
+type ReadingDay={care_day:string;reading_count:number};
 type Filter='All cases'|'Needs clinician'|'With clinician'|'Handover pending'|'Resolved';
 const filters:Filter[]=['All cases','Needs clinician','With clinician','Handover pending','Resolved'];
 const takenOver=(item:Pick<TriageCase,'status'>)=>['Acknowledged','In progress'].includes(item.status);
@@ -19,6 +20,8 @@ function State({value}:{value:string}){
 export default function AdminTriage(){
  const [day,setDay]=useState(careDay(new Date().toISOString()));
  const [cases,setCases]=useState<TriageCase[]>([]);
+ const [readingCount,setReadingCount]=useState(0);
+ const [readingDays,setReadingDays]=useState<ReadingDay[]>([]);
  const [loading,setLoading]=useState(true);
  const [error,setError]=useState('');
  const [query,setQuery]=useState('');
@@ -26,7 +29,7 @@ export default function AdminTriage(){
  const [refreshing,setRefreshing]=useState(false);
  const refresh=useCallback(async()=>{
   setRefreshing(true);setLoading(true);setError('');
-  try{const response=await fetch(`/api/triage?day=${encodeURIComponent(day)}`,{cache:'no-store'});const result=await response.json() as {cases?:TriageCase[];error?:string};if(!response.ok)throw Error(result.error||'Triage status could not be loaded.');setCases(result.cases||[]);}
+  try{const response=await fetch(`/api/triage?day=${encodeURIComponent(day)}`,{cache:'no-store'});const result=await response.json() as {cases?:TriageCase[];readingCount?:number;readingDays?:ReadingDay[];error?:string};if(!response.ok)throw Error(result.error||'Triage status could not be loaded.');setCases(result.cases||[]);setReadingCount(result.readingCount||0);setReadingDays(result.readingDays||[]);}
   catch(cause){setError(cause instanceof Error?cause.message:'Triage status could not be loaded.');}
   finally{setLoading(false);setRefreshing(false);}
  },[day]);
@@ -42,8 +45,9 @@ export default function AdminTriage(){
 
  return <div className="admin-triage-page">
   <div className="page-heading"><div><span className="eyebrow">CAMP OPERATIONS</span><h1>Clinical triage<span className="heading-dot">.</span></h1><p>Review meter flags and staff requests by care day; handoff status reflects the current state.</p></div><button className="triage-refresh" onClick={()=>void refresh()} disabled={refreshing} type="button"><RefreshCw size={16} className={refreshing?'spinning':''}/>{refreshing?'Refreshing…':'Refresh'}</button></div>
-  <section className="triage-day-filter panel"><strong>Care day</strong><CampDate value={day} onChange={setDay} label="Choose triage care day"/><span>Past days show their history; today also includes unresolved carry-over requests.</span></section>
-  <div className="triage-privacy-note"><ShieldCheck size={18}/><p>This screen flags the meter’s HI/LO display and staff-requested reviews. It does not show numeric glucose values, clinical notes, or reading history. Numeric alert thresholds are not configured.</p></div>
+  <section className="triage-day-filter panel"><strong>Care day</strong><CampDate value={day} onChange={setDay} label="Choose triage care day"/><span>{readingCount.toLocaleString()} {readingCount===1?'reading':'readings'} recorded for this day. Past days show their history; today also includes unresolved carry-over requests.</span></section>
+  {readingDays.length>0&&<section className="triage-reading-days" aria-label="Care days with glucose readings"><strong>Days with readings</strong><div>{readingDays.map(item=><button type="button" key={item.care_day} className={item.care_day===day?'selected':''} aria-pressed={item.care_day===day} onClick={()=>setDay(item.care_day)}><span>{dayLabel(item.care_day)}</span><b>{item.reading_count.toLocaleString()}</b></button>)}</div></section>}
+  <div className="triage-privacy-note"><ShieldCheck size={18}/><p>Triage cases include meter HI/LO flags and staff-requested reviews. The reading count above does not expose numeric glucose values or clinical notes. Numeric alert thresholds are not configured.</p></div>
   {error&&<div className="error-message" role="alert">{error}</div>}
   <div className="triage-metrics" aria-label="Triage summary">
    <section className="panel triage-metric"><span className="triage-metric-icon"><Activity size={19}/></span><div><strong>{cases.length}</strong><span>Cases shown</span></div></section>
