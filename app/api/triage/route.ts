@@ -6,7 +6,7 @@ export const dynamic='force-dynamic';
 
 export async function GET(request:Request){try{
  const {db,user,role,owner}=await context();
- if(!owner&&role!=='administrator')throw new RequestError('403:Only camp administrators can view triage status.');
+ if(!owner&&!['administrator','medical_lead'].includes(role))throw new RequestError('403:Only camp administrators and medical leads can view triage status.');
  await rateLimit(db,user.userId,'read',60);
  const today=careDay(new Date().toISOString());
  const requestedDay=new URL(request.url).searchParams.get('day')||today;
