@@ -412,3 +412,5 @@ select:not([multiple]):not([size]):disabled{cursor:not-allowed}.reg-birthday sel
 .error-edit-button{flex:0 0 auto;min-height:32px;padding:5px 10px;border-color:#e7c8bb;background:#fffaf8;color:#8c503e;font-size:11px}
 .error-edit-button:hover{background:#fff;color:#713e30}
 @media(max-width:760px){.camp-time>input[type=text]{font-size:16px;width:38px;min-width:38px}.camp-time>select{font-size:13px}}
+.camp-time>select{width:82px;min-width:82px;flex:0 0 82px;padding:4px 24px 4px 8px;text-align:center}
+.camp-time>select:focus-visible{outline:0;box-shadow:none}
